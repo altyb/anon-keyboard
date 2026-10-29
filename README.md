@@ -8,7 +8,7 @@
 
 ## Install
 
-1. Download `anon-keyboard-1.0.0.apk` from [Releases](https://github.com/altyb/anon-keyboard/releases/latest). One file for every Android phone, Android 8.0 or newer.
+1. Download `anon-keyboard-1.0.1.apk` from [Releases](https://github.com/altyb/anon-keyboard/releases/latest). One file for every Android phone, Android 8.0 or newer.
 2. Open it and allow installing from your browser or file manager if Android asks.
 3. Open **Anon Keyboard**, tap **Enable keyboard**, switch it on, then **Choose keyboard**.
 
