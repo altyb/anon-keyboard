@@ -65,7 +65,10 @@ class Engine(private val trie: Trie, private val user: UserDict) {
         }
         val cands = ArrayList<Cand>(16)
         for (w in trie.complete(cur, 5)) addCand(cands, w, trieBase(w), false, typedKey)
-        for (w in user.complete(cur, 3)) addCand(cands, w, trieBase(w), false, typedKey)
+        // A word the user typed before must be able to beat a fuzzy guess at a common word ("yey" → "hey").
+        for (w in user.complete(cur, 3)) {
+            addCand(cands, w, maxOf(trieBase(w), LEARNED_FLOOR + 2.0 * ln(user.count(w) + 1.0)), false, typedKey)
+        }
         for (sw in trie.fuzzy(cur, d, 3, nearFn)) {
             addCand(cands, sw.word, sw.score + 1.5 * ln(user.count(sw.word) + 1.0), true, typedKey)
         }
@@ -154,6 +157,8 @@ class Engine(private val trie: Trie, private val user: UserDict) {
     private companion object {
         /** Score boost for a word that commonly follows the previous word (≈ 12× frequency). */
         const val CONTEXT_BONUS = 2.5
+        /** Score floor for learned completions (≈ a very common dictionary word with one typo). */
+        const val LEARNED_FLOOR = 11.0
     }
 
     private fun isWordChar(c: Char): Boolean =

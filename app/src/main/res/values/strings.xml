@@ -73,6 +73,6 @@
     <string name="theme_dynamic">Wallpaper colours</string>
     <string name="animations">Animations</string>
     <string name="animations_sub">Key fades, popups and panels</string>
-    <string name="credit_text">Word lists: FrequencyWords by Hermit Dave, CC BY-SA 4.0.</string>
+    <string name="credit_text">Word lists: FrequencyWords by Hermit Dave, CC BY-SA 4.0. Word pairs: Tatoeba, CC BY 2.0 FR.</string>
     <string name="theme_material">Material You</string>
 </resources>

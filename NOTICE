@@ -7,3 +7,8 @@ derived from OpenSubtitles. The data is licensed under the
 Creative Commons Attribution-ShareAlike 4.0 International License
 (https://creativecommons.org/licenses/by-sa/4.0/).
 Files: app/src/main/assets/en.tsv, app/src/main/assets/ar.tsv
+
+This product includes sentence data from Tatoeba (https://tatoeba.org),
+licensed CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).
+Word-pair counts in app/src/main/assets/en.bigrams and ar.bigrams were derived from it
+with tools/bigrams.py.

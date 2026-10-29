@@ -70,6 +70,6 @@
     <string name="theme_dynamic">ألوان الخلفية</string>
     <string name="animations">الحركة</string>
     <string name="animations_sub">تلاشي الأزرار والنوافذ المنبثقة</string>
-    <string name="credit_text">قوائم الكلمات: FrequencyWords من Hermit Dave، رخصة CC BY-SA 4.0.</string>
+    <string name="credit_text">قوائم الكلمات: FrequencyWords من Hermit Dave، رخصة CC BY-SA 4.0. أزواج الكلمات: Tatoeba، رخصة CC BY 2.0 FR.</string>
     <string name="theme_material">ماتيريال يو</string>
 </resources>

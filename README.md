@@ -62,7 +62,7 @@ Needs JDK 17+ and the Android SDK (compileSdk 36, minSdk 26).
 
 ## Credits
 
-Word frequency lists from [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords) (built from OpenSubtitles), licensed CC BY-SA 4.0. See [NOTICE](NOTICE).
+Word frequency lists from [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords) (built from OpenSubtitles), licensed CC BY-SA 4.0. Next-word pairs counted from [Tatoeba](https://tatoeba.org) sentences, CC BY 2.0 FR. See [NOTICE](NOTICE).
 
 ## License
 

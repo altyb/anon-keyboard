@@ -79,4 +79,15 @@ class EngineTest {
         assertEquals("they", e.suggest("the", false, false).words.first { it != "the" })
         assertEquals("then", e.suggest("and the", false, false).words.first { it != "the" })
     }
+
+    @Test fun learnedWordBeatsFuzzyGuess() {
+        // "yey" is one typo from hey / yes / yet / key (real frequencies); a word typed twice must still show up.
+        val f = tmp.newFile()
+        Trie.build(sequenceOf("hey\t1149292", "yes\t1634050", "yet\t257947", "key\t160000", "yep\t300000"), emptySequence(), f)
+        val user = UserDict(File(tmp.root, "u3")).also { it.load() }
+        val e = Engine(Trie.open(f), user)
+        assertTrue("yeyet" !in e.suggest("yey", false, false).words)
+        user.learn("yeyet", null); user.learn("yeyet", null)
+        assertTrue("yeyet" in e.suggest("yey", false, false).words)
+    }
 }

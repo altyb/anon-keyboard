@@ -76,6 +76,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
             for (l in Layouts.languages) engines[l] = Engine(openTrie(l), userDict)
         }
         clipboard.addPrimaryClipChangedListener(clipListener)
+        getSharedPreferences(Prefs.FILE, MODE_PRIVATE).registerOnSharedPreferenceChangeListener(wipeListener)
         try { clips.loadPinned(pinnedFile) } catch (e: java.io.IOException) {}
         val screenOff = IntentFilter(Intent.ACTION_SCREEN_OFF)
         if (Build.VERSION.SDK_INT >= 33) registerReceiver(screenOffReceiver, screenOff, RECEIVER_NOT_EXPORTED)
@@ -95,6 +96,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
 
     override fun onDestroy() {
         clipboard.removePrimaryClipChangedListener(clipListener)
+        getSharedPreferences(Prefs.FILE, MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(wipeListener)
         unregisterReceiver(screenOffReceiver)
         worker.post { saveDict() }
         workerThread.quitSafely()
@@ -107,7 +109,9 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         val version = packageManager.getPackageInfo(packageName, 0).lastUpdateTime
         val stamp = File(filesDir, "$l.dict.version")
         fun build() {
-            assets.open("$l.tsv").bufferedReader().useLines { Trie.build(it, emptySequence(), file) }
+            // Word pairs (from Tatoeba) give next-word predictions before the user has typed anything.
+            val pairs = try { assets.open("$l.bigrams").bufferedReader().readLines() } catch (e: java.io.IOException) { emptyList() }
+            assets.open("$l.tsv").bufferedReader().useLines { Trie.build(it, pairs.asSequence(), file) }
             stamp.writeText(version.toString())
         }
         if (!file.exists() || stamp.takeIf { it.exists() }?.readText() != version.toString()) build()
@@ -431,6 +435,11 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     private fun saveDict() = try { userDict.save() } catch (e: java.io.IOException) {}
 
     private fun savePins() = try { clips.savePinned(pinnedFile) } catch (e: java.io.IOException) {}
+
+    // Settings and keyboard share one process, so a wipe pressed in Settings lands here at once.
+    private val wipeListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "wipeLearnedAt" || key == "wipeClipsAt") main.post { applyWipeRequests() }
+    }
 
     /** Settings asks for a wipe by writing a time stamp; we do it on the next keyboard show. */
     private fun applyWipeRequests() {
