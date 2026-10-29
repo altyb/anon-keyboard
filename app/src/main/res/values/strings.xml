@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Anon Keyboard</string>
-    <color name="ic_launcher_background">#1D1E21</color>
+    <color name="ic_launcher_background">#26282D</color>
 
     <string name="enable_keyboard">Enable keyboard</string>
     <string name="choose_keyboard">Choose keyboard</string>
