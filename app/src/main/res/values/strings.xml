@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Anon Keyboard</string>
+    <color name="ic_launcher_background">#1D1E21</color>
+
+    <string name="enable_keyboard">Enable keyboard</string>
+    <string name="choose_keyboard">Choose keyboard</string>
+    <string name="try_typing">Try typing here</string>
+
+    <string name="group_smart">Smart typing</string>
+    <string name="group_clipboard">Clipboard</string>
+    <string name="group_privacy">Privacy</string>
+    <string name="group_typing">Typing</string>
+    <string name="group_layout">Layout</string>
+    <string name="group_language">Language</string>
+    <string name="group_about">About</string>
+
+    <string name="suggestions">Suggestions</string>
+    <string name="suggestions_sub">3 words above the keys</string>
+    <string name="predict_next">Predict next word</string>
+    <string name="predict_next_sub">Guess the next word after space</string>
+    <string name="autocorrect">Autocorrect</string>
+    <string name="autocorrect_sub">Only when sure; backspace undoes it</string>
+    <string name="learn">Learn my words</string>
+    <string name="learn_sub">Learns your words, stays on this phone</string>
+    <string name="contacts">Contact names</string>
+    <string name="contacts_sub">Suggest names from contacts</string>
+
+    <string name="clipboard">Clipboard history</string>
+    <string name="clipboard_sub">Last 30 copies, cleared after 1 hour</string>
+
+    <string name="incognito">Incognito</string>
+    <string name="incognito_sub">Don\'t learn, don\'t keep clipboard</string>
+    <string name="clear_on_lock">Clear clipboard on lock</string>
+    <string name="clear_on_lock_sub">Wipe clipboard history when the screen locks</string>
+    <string name="secure_keyboard">Secure keyboard</string>
+    <string name="secure_keyboard_sub">Block screenshots of the keys in password fields</string>
+    <string name="clear_words">Clear learned words</string>
+    <string name="clear_clips">Clear clipboard history</string>
+    <string name="confirm_words_title">Clear learned words?</string>
+    <string name="confirm_words_text">This removes every word the keyboard learned.</string>
+    <string name="confirm_clips_title">Clear clipboard history?</string>
+    <string name="confirm_clips_text">This removes all saved clips.</string>
+    <string name="clear">Clear</string>
+    <string name="cancel">Cancel</string>
+    <string name="done">Done</string>
+
+    <string name="auto_caps">Auto-capitalize</string>
+    <string name="auto_caps_sub">Capital letter at sentence start</string>
+    <string name="double_space">Double space adds period</string>
+    <string name="double_space_sub">Space twice for a period</string>
+    <string name="vibrate">Vibrate on key</string>
+    <string name="vibrate_sub">Short vibration on each key</string>
+    <string name="sound">Sound on key</string>
+    <string name="sound_sub">Click sound on each key</string>
+
+    <string name="number_row">Number row</string>
+    <string name="number_row_sub">Separate row of numbers</string>
+    <string name="hints">Key hints</string>
+    <string name="hints_sub">Long-press for symbols and accents</string>
+    <string name="key_height">Key height</string>
+    <string name="percent">%1$d%%</string>
+
+    <string name="lang_system">System</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ar">العربية</string>
+
+    <string name="about_text">No internet permission. Everything stays on this phone.</string>
+    <string name="version">Version %1$s</string>
+    <string name="group_look">Look</string>
+    <string name="theme">Colours</string>
+    <string name="theme_classic">Classic</string>
+    <string name="theme_dynamic">Wallpaper colours</string>
+    <string name="animations">Animations</string>
+    <string name="animations_sub">Key fades, popups and panels</string>
+    <string name="credit_text">Word lists: FrequencyWords by Hermit Dave, CC BY-SA 4.0.</string>
+    <string name="theme_material">Material You</string>
+</resources>

@@ -1,0 +1,9 @@
+Anon Keyboard
+Copyright 2026 Altayeb
+
+This product includes word frequency data from FrequencyWords
+(https://github.com/hermitdave/FrequencyWords) by Hermit Dave,
+derived from OpenSubtitles. The data is licensed under the
+Creative Commons Attribution-ShareAlike 4.0 International License
+(https://creativecommons.org/licenses/by-sa/4.0/).
+Files: app/src/main/assets/en.tsv, app/src/main/assets/ar.tsv

@@ -1,0 +1,9 @@
+.gradle/
+build/
+local.properties
+*.apk
+.idea/
+dict-src/*.bz2
+dict-src/*_sentences.tsv
+research/
+.kotlin/

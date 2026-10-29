@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anon mockup</title>
+<style>
+  :root { --bg:#101112; --kb:#1B1B1C; --key:#3D3E40; --spec:#2C2D2F; --text:#F2F2F2; --muted:#A9ACB1; --line:#2E2F31; --cyan:#33B5E5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px; background: #0A0A0B; color: var(--text); font-family: Roboto, system-ui, sans-serif; }
+  h1 { margin: 0 0 20px; font-size: 22px; }
+  .screens { display: flex; flex-wrap: wrap; gap: 32px; }
+  figure { margin: 0; }
+  figcaption { margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+  .phone { width: 360px; max-width: 100%; height: 780px; display: flex; flex-direction: column; background: var(--bg); border-radius: 24px; overflow: hidden; border: 1px solid #222; }
+  .chat { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; padding: 20px 14px; }
+  .bubble { align-self: flex-start; max-width: 240px; padding: 10px 14px; border-radius: 16px; background: #26282B; font-size: 15px; }
+  .field { height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 22px; border: 1px solid #3A3C40; background: #1B1C1E; font-size: 16px; }
+  .kb { background: var(--kb); padding: 0 3px 8px; display: flex; flex-direction: column; gap: 6px; }
+  .strip { height: 44px; display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+  .strip button { flex: 1; height: 44px; border: 0; background: none; color: #E6E6E6; font: inherit; font-size: 16px; }
+  .strip .best { color: var(--cyan); font-weight: 700; }
+  .strip .icon { flex: 0 0 44px; color: var(--cyan); }
+  .strip .more { color: var(--muted); }
+  .sep { width: 1px; height: 22px; background: #3A3C40; }
+  .row { display: flex; gap: 4px; padding: 0 1px; }
+  .row.inset { padding: 0 18px; }
+  .k { position: relative; flex: 1 1 0; min-width: 0; height: 46px; border: 0; border-radius: 4px; background: var(--key); color: var(--text); font: inherit; font-size: 20px; box-shadow: 0 1px 0 #0B0B0C; }
+  .k sup { position: absolute; top: 3px; right: 5px; font-size: 10px; line-height: 1; color: var(--muted); }
+  .k.s { flex: 1.5 1 0; background: var(--spec); color: var(--cyan); font-size: 15px; font-weight: 600; }
+  .k.space { flex: 4.5 1 0; }
+  .panel { height: 300px; background: var(--kb); padding: 0 4px 10px; display: flex; flex-direction: column; gap: 6px; }
+  .clip { min-height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-radius: 6px; background: var(--spec); font-size: 15px; }
+  .clip span:first-child { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .small { font-size: 12px; color: var(--muted); }
+  .settings { padding: 20px 14px; display: flex; flex-direction: column; gap: 14px; overflow: auto; }
+  .group h2 { margin: 0 0 6px 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .card { background: var(--spec); border-radius: 12px; overflow: hidden; }
+  .card label { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 4px 14px; border-bottom: 1px solid #3A3C40; font-size: 15px; }
+  .card label span { flex: 1; }
+  input[type=checkbox], input[type=range] { accent-color: var(--cyan); }
+  input[type=checkbox] { width: 20px; height: 20px; }
+  [dir=rtl] { font-family: 'Noto Sans Arabic', Tahoma, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Anon — keyboard mockup</h1>
+<div class="screens">
+
+  <figure>
+    <figcaption>English</figcaption>
+    <div class="phone">
+      <div class="chat"><div class="bubble">Can you send the file tonight?</div><div class="field">Sure, I can hel</div></div>
+      <div class="kb">
+        <div class="strip"><button class="icon" aria-label="Clipboard">📋</button><button>hello</button><span class="sep"></span><button class="best">help</button><span class="sep"></span><button>helmet</button><button class="icon more" aria-label="Quick toggles">⋯</button></div>
+        <div class="row" data-keys="1 2 3 4 5 6 7 8 9 0"></div>
+        <div class="row" data-keys="Q W E R T Y U I O P" data-hints="% \ | = [ ] < > { }"></div>
+        <div class="row inset" data-keys="A S D F G H J K L" data-hints="@ # $ _ & - + ( )"></div>
+        <div class="row"><button class="k s">⇧</button><span class="row" style="flex:7;padding:0" data-keys="Z X C V B N M" data-hints="* &quot; ' : ; ! ?"></span><button class="k s">⌫</button></div>
+        <div class="row"><button class="k s">123</button><button class="k s">🌐</button><button class="k"><sup>;</sup>,</button><button class="k space" style="color:var(--cyan)">␣</button><button class="k"><sup>?!</sup>.</button><button class="k s">↵</button></div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Arabic</figcaption>
+    <div class="phone">
+      <div class="chat" dir="rtl"><div class="bubble">وصلك الملف؟</div><div class="field">نعم وصل، شكر</div></div>
+      <div class="kb">
+        <div class="strip" dir="rtl"><button class="icon" aria-label="الحافظة">📋</button><button>شكرًا</button><span class="sep"></span><button class="best">شكرا</button><span class="sep"></span><button>شكراً</button><button class="icon more" aria-label="مفاتيح سريعة">⋯</button></div>
+        <div class="row" data-keys="1 2 3 4 5 6 7 8 9 0" data-hints="١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ ٠"></div>
+        <div class="row" data-keys="ض ص ث ق ف غ ع ه خ ح ج"></div>
+        <div class="row" data-keys="ش س ي ب ل ا ت ن م ك ط" data-hints="_ _ ى _ لا أ"></div>
+        <div class="row"><span class="row" style="flex:10;padding:0" data-keys="ذ ئ ء ؤ ر ى ة و ز ظ"></span><button class="k s">⌫</button></div>
+        <div class="row"><button class="k s">١٢٣</button><button class="k s">🌐</button><button class="k"><sup>؛</sup>،</button><button class="k space" style="color:var(--cyan)">␣</button><button class="k"><sup>؟!</sup>.</button><button class="k s">↵</button></div>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Clipboard panel</figcaption>
+    <div class="phone">
+      <div class="chat"><div class="field" style="color:var(--muted)">Type a message</div></div>
+      <div class="panel">
+        <div class="strip"><button class="icon" style="color:var(--text)" aria-label="Back">‹</button><span style="flex:1;font-weight:600">Clipboard</span><span class="small" style="padding-right:12px">4 of 30 · clears after 1 h</span></div>
+        <div class="clip"><span>See you at 7 near the station</span><span class="small">now</span></div>
+        <div class="clip"><span>https://example.com/order/[ORDER-ID]</span><span class="small">4 min</span></div>
+        <div class="clip"><span>[YOUR ADDRESS]</span><span class="small" style="color:var(--cyan);font-weight:600">Pinned</span></div>
+        <div class="clip"><span>Meeting notes: send the file tonight</span><span class="small">22 min</span></div>
+        <p class="small" style="margin:0;padding:0 8px">Tap to paste · long-press to pin or delete · passwords are never saved</p>
+      </div>
+    </div>
+  </figure>
+
+  <figure>
+    <figcaption>Settings</figcaption>
+    <div class="phone settings">
+      <h1 style="margin:0">Anon</h1>
+      <div class="group"><h2>Smart typing</h2><div class="card" data-switches="Suggestion strip:1|Next-word prediction:1|Autocorrect:1|Learn my words:1|Contact names:0"></div></div>
+      <div class="group"><h2>Clipboard</h2><div class="card" data-switches="Clipboard history:1"></div></div>
+      <div class="group"><h2>Keys</h2><div class="card" data-switches="Auto-capitalize:1|Double space adds a period:1|Vibrate on key:1|Sound on key:0|Number row:1|Long-press symbols:1"></div></div>
+      <label class="card" style="display:flex;flex-direction:column;gap:8px;padding:12px 14px">Key height · 100%<input type="range" min="80" max="140" step="5" value="100"></label>
+    </div>
+  </figure>
+
+</div>
+<script>
+  for (const row of document.querySelectorAll('[data-keys]')) {
+    const hints = (row.dataset.hints || '').split(' ');
+    row.dataset.keys.split(' ').forEach((label, i) => {
+      const b = document.createElement('button');
+      b.className = 'k';
+      const h = hints[i] && hints[i] !== '_' ? hints[i] : '';
+      b.innerHTML = (h ? '<sup></sup>' : '') + '<span></span>';
+      if (h) b.querySelector('sup').textContent = h;
+      b.querySelector('span').textContent = label;
+      row.appendChild(b);
+    });
+  }
+  for (const card of document.querySelectorAll('[data-switches]')) {
+    for (const item of card.dataset.switches.split('|')) {
+      const [name, on] = item.split(':');
+      const l = document.createElement('label');
+      l.innerHTML = '<span></span><input type="checkbox">';
+      l.querySelector('span').textContent = name;
+      l.querySelector('input').checked = on === '1';
+      card.appendChild(l);
+    }
+  }
+</script>
+</body>
+</html>

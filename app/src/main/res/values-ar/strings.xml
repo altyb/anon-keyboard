@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="enable_keyboard">تفعيل لوحة المفاتيح</string>
+    <string name="choose_keyboard">اختيار لوحة المفاتيح</string>
+    <string name="try_typing">جرّب الكتابة هنا</string>
+
+    <string name="group_smart">كتابة ذكية</string>
+    <string name="group_clipboard">الحافظة</string>
+    <string name="group_privacy">الخصوصية</string>
+    <string name="group_typing">الكتابة</string>
+    <string name="group_layout">التخطيط</string>
+    <string name="group_language">اللغة</string>
+    <string name="group_about">حول</string>
+
+    <string name="suggestions">الاقتراحات</string>
+    <string name="suggestions_sub">٣ كلمات فوق المفاتيح</string>
+    <string name="predict_next">توقّع الكلمة التالية</string>
+    <string name="predict_next_sub">تخمين الكلمة التالية بعد المسافة</string>
+    <string name="autocorrect">التصحيح التلقائي</string>
+    <string name="autocorrect_sub">فقط عند التأكد؛ مسح الحرف يلغي التصحيح</string>
+    <string name="learn">تعلّم كلماتي</string>
+    <string name="learn_sub">يتعلم كلماتك ويبقى على هاتفك</string>
+    <string name="contacts">أسماء جهات الاتصال</string>
+    <string name="contacts_sub">اقتراح الأسماء من جهات الاتصال</string>
+
+    <string name="clipboard">سجل الحافظة</string>
+    <string name="clipboard_sub">آخر ٣٠ نسخة، تُمسح بعد ساعة</string>
+
+    <string name="incognito">وضع التخفي</string>
+    <string name="incognito_sub">لا تتعلم ولا تحفظ الحافظة</string>
+    <string name="clear_on_lock">مسح الحافظة عند القفل</string>
+    <string name="clear_on_lock_sub">مسح سجل الحافظة عند قفل الشاشة</string>
+    <string name="secure_keyboard">لوحة آمنة</string>
+    <string name="secure_keyboard_sub">منع لقطات الشاشة للمفاتيح في حقول كلمات المرور</string>
+    <string name="clear_words">مسح الكلمات المتعلَّمة</string>
+    <string name="clear_clips">مسح سجل الحافظة</string>
+    <string name="confirm_words_title">مسح الكلمات المتعلَّمة؟</string>
+    <string name="confirm_words_text">سيُحذف كل ما تعلّمته اللوحة من كلمات.</string>
+    <string name="confirm_clips_title">مسح سجل الحافظة؟</string>
+    <string name="confirm_clips_text">سيُحذف كل المقاطع المحفوظة.</string>
+    <string name="clear">مسح</string>
+    <string name="cancel">إلغاء</string>
+    <string name="done">تم</string>
+
+    <string name="auto_caps">الحروف الكبيرة التلقائية</string>
+    <string name="auto_caps_sub">حرف كبير في بداية الجملة</string>
+    <string name="double_space">المسافة المزدوجة تضيف نقطة</string>
+    <string name="double_space_sub">المسافة مرتين للنقطة</string>
+    <string name="vibrate">اهتزاز عند الضغط</string>
+    <string name="vibrate_sub">اهتزاز قصير مع كل ضغطة</string>
+    <string name="sound">صوت عند الضغط</string>
+    <string name="sound_sub">نقرة صوتية مع كل ضغطة</string>
+
+    <string name="number_row">صف الأرقام</string>
+    <string name="number_row_sub">صف منفصل للأرقام</string>
+    <string name="hints">تلميحات المفاتيح</string>
+    <string name="hints_sub">اضغط مطولاً للرموز والحروف المميزة</string>
+    <string name="key_height">ارتفاع المفاتيح</string>
+    <string name="percent">%1$d%%</string>
+
+    <string name="lang_system">النظام</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ar">العربية</string>
+
+    <string name="about_text">لا يوجد إذن إنترنت. كل شيء يبقى على هاتفك.</string>
+    <string name="version">الإصدار %1$s</string>
+    <string name="group_look">المظهر</string>
+    <string name="theme">الألوان</string>
+    <string name="theme_classic">الكلاسيكي</string>
+    <string name="theme_dynamic">ألوان الخلفية</string>
+    <string name="animations">الحركة</string>
+    <string name="animations_sub">تلاشي الأزرار والنوافذ المنبثقة</string>
+    <string name="credit_text">قوائم الكلمات: FrequencyWords من Hermit Dave، رخصة CC BY-SA 4.0.</string>
+    <string name="theme_material">ماتيريال يو</string>
+</resources>

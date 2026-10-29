@@ -1,0 +1,141 @@
+package dev.altayeb.anon
+
+/** Special key codes. Letters use their Unicode code point. */
+object Codes {
+    const val SHIFT = -1
+    const val DELETE = -2
+    const val ENTER = -3
+    const val SYMBOLS = -4   // "123" → symbols layout
+    const val LETTERS = -5   // "ABC" → back to letters
+    const val LANG = -6      // globe → next language
+    const val CLIPBOARD = -7
+    const val EMOJI = -8
+    const val SPACE = 32
+}
+
+/**
+ * One key. [hint] = small label, first in the long-press popup ("" = none). [alts] = more popup choices.
+ * [width] is relative (1 = normal key).
+ */
+data class Key(
+    val label: String,
+    val code: Int,
+    val hint: String = "",
+    val width: Float = 1f,
+    val alts: List<String> = emptyList(),
+) {
+    /** What long-press offers: hint first, then alternates. */
+    val popup: List<String> get() = (if (hint.isEmpty()) alts else listOf(hint) + alts).distinct()
+}
+
+/** [id]: "en", "ar", "symbols", "numbers". [rtl] true for Arabic. */
+class Layout(val id: String, val rows: List<List<Key>>, val rtl: Boolean)
+
+object Layouts {
+    /** Languages the globe key cycles through, in order. */
+    val languages = listOf("en", "ar")
+
+    private val cache = HashMap<String, Layout>()
+
+    fun get(id: String, numberRow: Boolean): Layout {
+        val real = if (id == "ar" || id == "symbols" || id == "numbers") id else "en"
+        return cache.getOrPut("$real/$numberRow") { build(real, numberRow) }
+    }
+
+    private fun build(id: String, numberRow: Boolean): Layout = when (id) {
+        "ar" -> arabic(numberRow)
+        "symbols" -> symbols()
+        "numbers" -> numbers()
+        else -> english(numberRow)
+    }
+
+    /** Accented letters and look-alikes offered on long-press, by base letter. */
+    private val ALTS = mapOf(
+        "a" to "à á â ä ã å æ", "c" to "ç", "e" to "é è ê ë ē €", "i" to "í ì î ï", "n" to "ñ",
+        "o" to "ó ò ô ö õ ø œ", "s" to "ß", "u" to "ú ù û ü", "y" to "ý ÿ",
+        "ا" to "أ إ آ ٱ", "ي" to "ى ئ", "ى" to "ئ ي", "ه" to "ة", "و" to "ؤ", "ل" to "لا", "ء" to "ئ ؤ",
+        "ك" to "گ", "ف" to "ڤ", "ج" to "چ", "ب" to "پ",
+    ).mapValues { it.value.split(" ") }
+
+    /** Letters: label = uppercase (or the letter itself for Arabic), code = its code point. */
+    private fun letterRow(letters: String, hints: List<String> = emptyList()): List<Key> =
+        letters.split(" ").mapIndexed { i, c ->
+            Key(c.uppercase(), c[0].code, hints.getOrElse(i) { "" }, alts = ALTS[c].orEmpty())
+        }
+
+    /** Top letter row: digits as hints when there is no number row, symbols otherwise (symbol moves to the popup). */
+    private fun topRow(letters: String, digits: String, symbols: List<String>, numberRow: Boolean): List<Key> =
+        letterRow(letters).mapIndexed { i, k ->
+            if (numberRow) k.copy(hint = symbols.getOrElse(i) { "" })
+            else k.copy(hint = digits.getOrNull(i)?.toString().orEmpty(), alts = listOfNotNull(symbols.getOrNull(i)?.takeIf { it.isNotEmpty() }) + k.alts)
+        }
+
+    /** Bottom row shared by both languages. */
+    private fun bottomRow(symbolsLabel: String, comma: String, commaHint: String, punct: List<String>): List<Key> = listOf(
+        Key(symbolsLabel, Codes.SYMBOLS, width = 1.5f),
+        Key("☺", Codes.EMOJI),
+        Key(comma, comma[0].code, commaHint),
+        Key("", Codes.SPACE, width = 5f),
+        Key(".", '.'.code, punct[0], alts = punct.drop(1)),
+        Key("↵", Codes.ENTER, width = 1.5f),
+    )
+
+    private fun digitRow(hints: List<String> = emptyList()): List<Key> =
+        "1234567890".mapIndexed { i, c -> Key(c.toString(), c.code, hints.getOrElse(i) { "" }) }
+
+    private fun chars(s: String): List<Key> = s.split(" ").map { Key(it, it[0].code) }
+
+    private fun english(numberRow: Boolean): Layout {
+        val rows = mutableListOf<List<Key>>()
+        if (numberRow) rows += digitRow()
+        rows += topRow("q w e r t y u i o p", "1234567890", listOf("%", "\\", "|", "=", "[", "]", "<", ">", "{", "}"), numberRow)
+        rows += letterRow("a s d f g h j k l", listOf("@", "#", "$", "_", "&", "-", "+", "(", ")"))
+        rows += listOf(Key("⇧", Codes.SHIFT, width = 1.5f)) +
+            letterRow("z x c v b n m", listOf("*", "\"", "'", ":", ";", "!", "?")) +
+            Key("⌫", Codes.DELETE, width = 1.5f)
+        rows += bottomRow("123", ",", ";", listOf("?", "!", ",", ";", ":", "…"))
+        return Layout("en", rows, rtl = false)
+    }
+
+    private fun arabic(numberRow: Boolean): Layout {
+        val rows = mutableListOf<List<Key>>()
+        if (numberRow) rows += digitRow(listOf("١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", "٠"))
+        rows += topRow("ض ص ث ق ف غ ع ه خ ح ج", "١٢٣٤٥٦٧٨٩٠", emptyList(), numberRow)
+        rows += letterRow("ش س ي ب ل ا ت ن م ك ط", listOf("", "", "ى", "", "لا", "أ"))
+        rows += letterRow("ذ ء ؤ ر ى ة و ز ظ د") + Key("⌫", Codes.DELETE, width = 1.5f)
+        rows += bottomRow("١٢٣", "،", "؛", listOf("؟", "!", "،", "؛", ":", "…"))
+        return Layout("ar", rows, rtl = true)
+    }
+
+    private fun symbols(): Layout {
+        val rows = listOf(
+            digitRow(),
+            chars("@ # \$ _ & - + ( ) /"),
+            chars("* \" ' : ; ! ? ,") + Key("⌫", Codes.DELETE, width = 1.5f),
+            listOf(
+                Key("ABC", Codes.LETTERS, width = 1.5f),
+                Key("☺", Codes.EMOJI),
+                Key(",", ','.code),
+                Key("", Codes.SPACE, width = 5f),
+                Key(".", '.'.code),
+                Key("↵", Codes.ENTER, width = 1.5f),
+            ),
+        )
+        return Layout("symbols", rows, rtl = false)
+    }
+
+    private fun numbers(): Layout {
+        val rows = listOf(
+            chars("1 2 3 -"),
+            chars("4 5 6 ,"),
+            chars("7 8 9") + Key("⌫", Codes.DELETE),
+            listOf(
+                Key("ABC", Codes.LETTERS),
+                Key("0", '0'.code),
+                Key(".", '.'.code),
+                Key("↵", Codes.ENTER),
+            ),
+        )
+        return Layout("numbers", rows, rtl = false)
+    }
+}

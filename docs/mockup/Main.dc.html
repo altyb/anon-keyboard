@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Anon Keyboard English keyboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#33B5E5}a:hover{color:#7FD3F2}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #101112; color: #F2F2F2; font-family: Roboto, system-ui, sans-serif;">
+  <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; padding: 24px 16px;">
+    <div style="align-self: flex-start; max-width: 260px; padding: 10px 14px; border-radius: 16px; background: #26282B; font-size: 15px; line-height: 1.4;">Can you send the file tonight?</div>
+    <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #B0B3B8;">Message
+      <input type="text" value="Sure, I can hel" style="height: 44px; box-sizing: border-box; padding: 0 14px; border-radius: 22px; border: 1px solid #3A3C40; background: #1B1C1E; color: #F2F2F2; font-size: 16px; font-family: inherit;">
+    </label>
+  </div>
+  <div style="background: #1B1B1C; padding: 0 3px 8px; display: flex; flex-direction: column; gap: 6px;">
+    <div style="height: 44px; display: flex; align-items: center; border-bottom: 1px solid #2E2F31;">
+      <button aria-label="Clipboard" style="width: 44px; height: 44px; border: 0; background: transparent; color: #33B5E5; display: flex; align-items: center; justify-content: center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"></path></svg>
+      </button>
+      <button style="flex: 1; height: 44px; border: 0; background: transparent; color: #E6E6E6; font-size: 16px; font-family: inherit;">hello</button>
+      <span aria-hidden="true" style="width: 1px; height: 22px; background: #3A3C40;"></span>
+      <button style="flex: 1; height: 44px; border: 0; background: transparent; color: #33B5E5; font-size: 16px; font-weight: 700; font-family: inherit;">help</button>
+      <span aria-hidden="true" style="width: 1px; height: 22px; background: #3A3C40;"></span>
+      <button style="flex: 1; height: 44px; border: 0; background: transparent; color: #E6E6E6; font-size: 16px; font-family: inherit;">helmet</button>
+      <button aria-label="Quick toggles" style="width: 44px; height: 44px; border: 0; background: transparent; color: #B0B3B8; display: flex; align-items: center; justify-content: center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+      </button>
+    </div>
+    <sc-for list="{{rows}}" as="row" hint-placeholder-count="4">
+      <div style="{{row.style}}">
+        <sc-for list="{{row.keys}}" as="k" hint-placeholder-count="10">
+          <button style="{{k.style}}">
+            <span style="{{hintStyle}}">{{k.hint}}</span>{{k.label}}
+          </button>
+        </sc-for>
+      </div>
+    </sc-for>
+    <div style="display: flex; gap: 4px; padding: 0 1px;">
+      <button style="{{specCyan}}">123</button>
+      <button aria-label="Switch language" style="{{specCyan}}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg>
+      </button>
+      <button style="{{key}}"><span style="{{hintStyle}}">;</span>,</button>
+      <button aria-label="Space" style="{{space}}">
+        <svg width="34" height="12" viewBox="0 0 34 12" fill="none" stroke="#33B5E5" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 3v7h30V3"></path></svg>
+      </button>
+      <button style="{{key}}"><span style="{{hintStyle}}">?!</span>.</button>
+      <button aria-label="Enter" style="{{specCyan}}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 5v7a3 3 0 0 1-3 3H5"></path><path d="M9 11l-4 4 4 4"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"numberRow":{"editor":"boolean","default":true},"keyHeight":{"editor":"range","default":100,"min":80,"max":140,"step":5,"unit":"%"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const h = Math.round(46 * (this.props.keyHeight ?? 100) / 100);
+    const base = 'position: relative; height: ' + h + 'px; border: 0; border-radius: 4px; font-family: inherit; color: #F2F2F2; display: flex; align-items: center; justify-content: center; padding: 0; min-width: 0; box-shadow: 0 1px 0 #0B0B0C;';
+    const key = base + ' flex: 1 1 0; background: #3D3E40; font-size: 21px;';
+    const spec = base + ' flex: 1.5 1 0; background: #2C2D2F; font-size: 15px;';
+    const specCyan = spec + ' color: #33B5E5; font-weight: 600;';
+    const mk = (labels, hints) => labels.split(' ').map((c, i) => ({ label: c, hint: (hints || '').split(' ')[i] || '', style: key }));
+    const row = (pad, keys) => ({ style: 'display: flex; gap: 4px; padding: 0 ' + pad + 'px;', keys });
+    const shift = { label: '⇧', hint: '', style: spec + ' color: #33B5E5; font-size: 24px;' };
+    const del = { label: '⌫', hint: '', style: spec + ' color: #33B5E5; font-size: 22px;' };
+    const rows = [
+      row(1, mk('Q W E R T Y U I O P', '% \\ | = [ ] < > { }')),
+      row(18, mk('A S D F G H J K L', '@ # $ _ & - + ( )')),
+      row(1, [shift].concat(mk('Z X C V B N M', '* " \' : ; ! ?'), [del]))
+    ];
+    if (this.props.numberRow ?? true) rows.unshift(row(1, mk('1 2 3 4 5 6 7 8 9 0', '')));
+    return {
+      rows,
+      key,
+      specCyan,
+      space: base + ' flex: 4.5 1 0; background: #3D3E40;',
+      hintStyle: 'position: absolute; top: 3px; right: 5px; font-size: 10px; line-height: 1; color: #A9ACB1;'
+    };
+  }
+}
+</script>
+</body>
+</html>
