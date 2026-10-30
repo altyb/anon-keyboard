@@ -96,6 +96,9 @@ class UserDict(private val file: File) {
         return hits.sortedByDescending { it.second }.map { it.first }.distinct().take(k)
     }
 
+    /** Every learned word and contact name. Size is capped by the eviction limits. */
+    fun allWords(): List<String> = words.values.map { it.display } + contacts.values
+
     /** Up to [k] learned next words after [prev], best first. */
     fun next(prev: String, k: Int): List<String> {
         if (k <= 0) return emptyList()

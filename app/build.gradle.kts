@@ -11,8 +11,8 @@ android {
         applicationId = "dev.altayeb.anon"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.1.0"
     }
     // Release key lives outside the repo; set ANON_KS / ANON_KS_PASS / ANON_KEY_ALIAS to sign.
     signingConfigs {

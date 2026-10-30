@@ -1,0 +1,10 @@
+A small Android keyboard for English and Arabic. It has no internet permission, so nothing you type can leave the phone.
+
+- Glide typing in both languages, offline
+- Word suggestions, next-word prediction and careful autocorrect that learn on the phone only
+- Hold space and drag to move the cursor; slide on delete to remove whole words
+- One-handed mode
+- Clipboard history with pins
+- Emoji panel with search by English or Arabic name
+- Classic tall keys, or Material You colours
+- Password fields: no learning, no history, hidden from screenshots

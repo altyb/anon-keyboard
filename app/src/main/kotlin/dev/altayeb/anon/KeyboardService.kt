@@ -28,7 +28,7 @@ import java.io.File
  * Main thread owns views and the input connection; the worker owns the tries, engines and user dictionary.
  */
 class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionStrip.Listener, EmojiPanel.Listener,
-    ClipPanel.Listener {
+    ClipPanel.Listener, EmojiSearchBar.Listener {
 
     private lateinit var keys: KeyboardView
     private lateinit var strip: SuggestionStrip
@@ -63,6 +63,9 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     private var bestFor = ""         // the typed word [best] was computed for; space checks it still matches
     private var autoCorrect = false
     private var lastCorrection: Pair<String, String>? = null  // original → corrected, for undo by backspace
+    private var lastGlide = ""       // word the last glide typed; backspace removes it whole, a new word gets a space
+    private var searchBar: EmojiSearchBar? = null
+    private var searching = false
     @Volatile private var generation = 0
 
     private val clipboard by lazy { getSystemService(ClipboardManager::class.java) }
@@ -164,12 +167,16 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         strip.visibility = if (noSuggestions) View.GONE else View.VISIBLE
         hideClipPanel()
         hideEmoji()
+        stopEmojiSearch()
         // Nothing from the previous field may act in this one (a stale autocorrect could rewrite a password).
         autoCorrect = false
         best = ""
         bestFor = ""
         lastCorrection = null
+        lastGlide = ""
         capsLock = false
+        keys.hand = prefs.oneHanded
+        keys.swipeEdit = prefs.swipeEdit
         applyLayout(if (numeric) "numbers" else lang)
         if (prefs.contacts) loadContacts() else worker.post { userDict.setContacts(emptyList()) }
         updateShift()
@@ -187,11 +194,16 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         val ic = currentInputConnection ?: return
         if (prefs.sound) getSystemService(AudioManager::class.java)
             .playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD)
+        if (searching) { searchKey(code); return }
         val undo = lastCorrection
         lastCorrection = null
+        val glided = lastGlide
+        lastGlide = ""
         when (code) {
             Codes.DELETE -> {
-                if (undo != null) {
+                if (glided.isNotEmpty() && ic.getTextBeforeCursor(glided.length, 0)?.toString() == glided) {
+                    ic.deleteSurroundingText(glided.length, 0)
+                } else if (undo != null) {
                     ic.deleteSurroundingText(undo.second.length + 1, 0)
                     ic.commitText(undo.first, 1)
                 } else if (ic.getSelectedText(0).isNullOrEmpty()) {
@@ -231,6 +243,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
                 // "@", ":" and "/" start emails and links: the word before them is not learned.
                 if (!Character.isLetterOrDigit(code) && code != '\''.code && code.toChar() !in "@:/") learnLastWord()
                 autoCorrect = false // the next result decides again; a stale one must not fire on space
+                if (glided.isNotEmpty() && Character.isLetterOrDigit(code)) ic.commitText(" ", 1)
                 ic.commitText(if (shift) text.uppercase() else text, 1)
                 if (shift && !capsLock) { shift = false; keys.shifted = false }
             }
@@ -242,6 +255,8 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     override fun onSpecialLongPress(code: Int) {
         if (code == Codes.SPACE) {
             getSystemService(android.view.inputmethod.InputMethodManager::class.java).showInputMethodPicker()
+        } else if (code == Codes.EMOJI) {
+            onHand(if (prefs.oneHanded != 0) 0 else 1)
         } else {
             onToggles()
         }
@@ -251,7 +266,68 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         if (layout?.id == "en" || layout?.id == "ar") nextLanguage(dir)
     }
 
+    override fun onCursor(dir: Int) {
+        lastGlide = ""
+        sendDownUpKeyEvents(if (dir > 0) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT)
+        updateShift()
+        requestSuggestions()
+    }
+
+    override fun onDeleteWord() {
+        val ic = currentInputConnection ?: return
+        lastGlide = ""
+        lastCorrection = null
+        val before = ic.getTextBeforeCursor(64, 0)?.toString().orEmpty()
+        ic.deleteSurroundingText(wordDeleteLength(before), 0)
+        updateShift()
+        requestSuggestions()
+    }
+
+    override fun onHand(side: Int) {
+        prefs = prefs.copy(oneHanded = side)
+        getSharedPreferences(Prefs.FILE, MODE_PRIVATE).edit().putInt("oneHanded", side).apply()
+        keys.hand = side
+    }
+
+    override fun onGlide(path: FloatArray, centers: Map<Char, List<FloatArray>>) {
+        val gen = ++generation
+        val before = currentInputConnection?.getTextBeforeCursor(64, 0)?.toString().orEmpty()
+        val engineLang = layout?.id ?: return
+        val prev = WORD.findAll(before).lastOrNull()?.value.orEmpty()
+        worker.post {
+            val words = try {
+                engines[engineLang]?.glide(Glide(path, centers), prev).orEmpty()
+            } catch (e: RuntimeException) {
+                emptyList() // damaged dictionary: nothing typed rather than a dead keyboard
+            }
+            main.post { if (gen == generation) commitGlide(words) }
+        }
+    }
+
+    private fun commitGlide(words: List<String>) {
+        val ic = currentInputConnection ?: return
+        if (words.isEmpty()) return
+        val cased = words.map { if (capsLock) it.uppercase() else if (shift) it.replaceFirstChar(Char::uppercase) else it }
+        val word = cased[0]
+        val before = ic.getTextBeforeCursor(1, 0)?.toString().orEmpty()
+        if (before.isNotEmpty() && before[0].isLetterOrDigit()) {
+            learnLastWord()
+            ic.commitText(" ", 1)
+        }
+        ic.commitText(word, 1)
+        lastGlide = word
+        lastCorrection = null
+        bestFor = word
+        best = word
+        autoCorrect = false
+        if (shift && !capsLock) { shift = false; keys.shifted = false }
+        updateShift()
+        // The other guesses stay on the strip: picking one replaces the word.
+        strip.show(word, cased.drop(1), layout?.rtl == true)
+    }
+
     override fun onLongPress(text: String) {
+        if (searching) { searchText(text); return }
         currentInputConnection?.commitText(if (shift) text.uppercase() else text, 1)
         if (shift && !capsLock) { shift = false; keys.shifted = false }
         updateShift()
@@ -289,6 +365,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
 
     override fun onPick(word: String) {
         val ic = currentInputConnection ?: return
+        lastGlide = ""
         if (clipChip.isNotEmpty() && word == clipChip) {
             ic.commitText(clipChipText, 1)
             clips.fresh(CHIP_MS)?.let { clipChipUsedId = it.id }
@@ -509,6 +586,68 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
 
     override fun onEmojiDelete() = onKey(Codes.DELETE)
 
+    // ---- emoji search: the keys type into the search bar instead of the app ----
+
+    private val emojiIndex by lazy {
+        EmojiIndex(assets.open("emoji-names.txt").bufferedReader().use { it.readLines() })
+    }
+
+    override fun onEmojiSearch() {
+        hideEmoji()
+        searching = true
+        val bar = searchBar ?: EmojiSearchBar(this).also {
+            it.listener = this
+            searchBar = it
+        }
+        bar.setTheme(theme)
+        bar.show("", emptyList())
+        if (bar.parent == null) root.addView(bar, 0)
+        strip.visibility = View.GONE
+        keys.glideEnabled = false
+        keys.swipeEdit = false
+        shift = false
+        keys.shifted = false
+        if (layout?.id != "en" && layout?.id != "ar") applyLayout(lang)
+    }
+
+    private fun stopEmojiSearch() {
+        if (!searching) return
+        searching = false
+        searchBar?.let { root.removeView(it) }
+        strip.visibility = if (noSuggestions) View.GONE else View.VISIBLE
+        keys.swipeEdit = prefs.swipeEdit
+        applyLayout(layout?.id ?: lang)
+    }
+
+    private fun searchKey(code: Int) {
+        val bar = searchBar ?: return
+        when (code) {
+            Codes.DELETE -> bar.show(bar.query.dropLast(1), emojiIndex.search(bar.query.dropLast(1)))
+            Codes.ENTER -> bar.results.firstOrNull()?.let { onSearchPick(it) }
+            Codes.SYMBOLS -> applyLayout("symbols")
+            Codes.LETTERS -> applyLayout(lang)
+            Codes.EMOJI -> onSearchClose()
+            Codes.SHIFT, Codes.LANG, Codes.CLIPBOARD -> Unit
+            else -> searchText(String(Character.toChars(code)))
+        }
+    }
+
+    private fun searchText(text: String) {
+        val bar = searchBar ?: return
+        val q = (bar.query + text).take(40)
+        bar.show(q, emojiIndex.search(q))
+    }
+
+    override fun onSearchPick(emoji: String) {
+        currentInputConnection?.commitText(emoji, 1)
+        if (!incognito) emojiPanel?.remember(emoji)
+    }
+
+    override fun onSearchClose() {
+        stopEmojiSearch()
+        showEmoji()
+    }
+
     // ---- helpers ----
 
     private fun applyLayout(id: String) {
@@ -516,6 +655,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         layout = l
         val name = when (l.id) { "en" -> "English"; "ar" -> "العربية"; else -> "" }
         keys.setLayout(l, prefs.keyHeight, prefs.hints, prefs.vibrate, name)
+        keys.glideEnabled = prefs.glide && !noSuggestions && !searching && (l.id == "en" || l.id == "ar")
         if (l.id == "en" || l.id == "ar") worker.post { engines[l.id]?.setLayout(l) }
     }
 
@@ -546,4 +686,12 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
             InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
         )
     }
+}
+
+/** How many chars one word-delete removes: trailing spaces, then everything back to the previous space. */
+internal fun wordDeleteLength(before: String): Int {
+    var i = before.length
+    while (i > 0 && before[i - 1].isWhitespace()) i--
+    while (i > 0 && !before[i - 1].isWhitespace()) i--
+    return before.length - i
 }

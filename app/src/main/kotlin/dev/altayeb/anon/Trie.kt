@@ -126,6 +126,28 @@ class Trie private constructor(private val buf: MappedByteBuffer) {
         }
     }
 
+    /** Words whose letters fit the glide [g], best first, up to [k]. */
+    fun glide(g: Glide, k: Int): List<ScoredWord> {
+        if (k <= 0) return emptyList()
+        fzK = k
+        g.reset()
+        val heap = PriorityQueue<ScoredWord>(k + 1, Comparator { a, b -> a.score.compareTo(b.score) })
+        walkGlide(g, 0, 0, heap)
+        return heap.sortedByDescending { it.score }
+    }
+
+    private fun walkGlide(g: Glide, node: Int, depth: Int, heap: PriorityQueue<ScoredWord>) {
+        if (depth >= Glide.MAX_DEPTH) return
+        val first = firstChildAt(node)
+        for (c in first until first + childCountAt(node)) {
+            if (!g.push(depth, charAt(c))) continue
+            val d = depth + 1
+            val f = freqAt(c)
+            if (f > 0 && g.fits(d)) offer(heap, c, Glide.FREQ_WEIGHT * ln(f + 1.0) + g.shape(d))
+            walkGlide(g, c, d, heap)
+        }
+    }
+
     /** Up to [k] most likely next words after [word]. */
     fun next(word: String, k: Int): List<String> {
         if (k <= 0) return emptyList()

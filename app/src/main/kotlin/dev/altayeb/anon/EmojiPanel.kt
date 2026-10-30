@@ -13,6 +13,7 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
         fun onEmoji(emoji: String)
         fun onEmojiBack()
         fun onEmojiDelete()
+        fun onEmojiSearch()
     }
 
     var listener: Listener? = null
@@ -44,6 +45,9 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
     private val tabIconPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 20 * density; textAlign = Paint.Align.CENTER }
     private val emojiPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 26 * density; textAlign = Paint.Align.CENTER }
     private val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = CYAN; textSize = 16 * density; textAlign = Paint.Align.CENTER }
+    private val searchPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = CYAN; style = Paint.Style.STROKE; strokeWidth = 2 * density; strokeCap = Paint.Cap.ROUND
+    }
     private val deletePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = CYAN; textSize = 20 * density; textAlign = Paint.Align.CENTER }
 
     /** Colours from the keyboard theme. */
@@ -54,6 +58,7 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
         underlinePaint.color = t.accent
         labelPaint.color = t.accent
         deletePaint.color = t.accent
+        searchPaint.color = t.accent
         invalidate()
     }
 
@@ -117,6 +122,9 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
         val mid = gridBottom + bottomH / 2
         canvas.drawText("ABC", sideW / 2, baselineFor(mid, labelPaint), labelPaint)
         canvas.drawText("⌫", w - sideW / 2, baselineFor(mid, deletePaint), deletePaint)
+        val s = 7 * density // magnifier, drawn so it takes the theme colour
+        canvas.drawCircle(w / 2 - s / 3, mid - s / 3, s, searchPaint)
+        canvas.drawLine(w / 2 + s * 0.4f, mid + s * 0.4f, w / 2 + s * 1.2f, mid + s * 1.2f, searchPaint)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -157,6 +165,7 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
             y >= gridBottom -> when {
                 x < sideW -> listener?.onEmojiBack()
                 x > w - sideW -> listener?.onEmojiDelete()
+                else -> listener?.onEmojiSearch()
             }
             else -> {
                 val col = (x / (w / COLS)).toInt()
@@ -190,7 +199,7 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
     }
 
     /** Newest first, no duplicates, capped at MAX_RECENT. Visible recents grid is not reordered until re-opened. */
-    private fun remember(emoji: String) {
+    fun remember(emoji: String) {
         val old = prefs.getString(KEY, "").orEmpty().split(' ').filter { it.isNotEmpty() && it != emoji }
         prefs.edit().putString(KEY, (listOf(emoji) + old).take(MAX_RECENT).joinToString(" ")).apply()
     }

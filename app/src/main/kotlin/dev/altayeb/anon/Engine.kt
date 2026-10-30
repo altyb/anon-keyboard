@@ -97,6 +97,30 @@ class Engine(private val trie: Trie, private val user: UserDict) {
         return Suggestions(top.map { applyCase(it.word, cur) }, auto)
     }
 
+    /** Words for a finished glide, best first. [prev] = the word before it, "" if none. */
+    fun glide(g: Glide, prev: String): List<String> {
+        val scored = HashMap<String, ScoredWord>()
+        fun add(word: String, score: Double) {
+            val key = Normalize.key(word)
+            val old = scored[key]
+            if (old == null || score > old.score) scored[key] = ScoredWord(word, score)
+        }
+        for (sw in trie.glide(g, 12)) add(sw.word, sw.score + 1.5 * ln(user.count(sw.word) + 1.0))
+        // Learned words are what the dictionary lacks (names, dialect), so they get to compete too.
+        for (w in user.allWords()) {
+            val shape = g.shapeOf(Normalize.key(w)) ?: continue
+            add(w, Glide.FREQ_WEIGHT * LEARNED_FLOOR + 1.5 * ln(user.count(w) + 1.0) + shape)
+        }
+        if (prev.isNotEmpty()) {
+            for ((rank, w) in (user.next(prev, 8) + trie.next(prev, 8)).withIndex()) {
+                val key = Normalize.key(w)
+                val sw = scored[key] ?: continue
+                scored[key] = ScoredWord(sw.word, sw.score + CONTEXT_BONUS - 0.2 * rank)
+            }
+        }
+        return scored.values.sortedByDescending { it.score }.take(3).map { it.word }
+    }
+
     private class Cand(val word: String, val key: String, val score: Double, val fromFuzzy: Boolean)
 
     /** Word just before position [start] (skipping spaces), "" if none. */

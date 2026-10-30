@@ -72,4 +72,11 @@
     <string name="animations_sub">تلاشي الأزرار والنوافذ المنبثقة</string>
     <string name="credit_text">قوائم الكلمات: FrequencyWords من Hermit Dave، رخصة CC BY-SA 4.0. أزواج الكلمات: Tatoeba، رخصة CC BY 2.0 FR.</string>
     <string name="theme_material">ماتيريال يو</string>
+    <string name="glide">الكتابة بالسحب</string>
+    <string name="glide_sub">اسحب فوق الحروف دون رفع إصبعك</string>
+    <string name="swipe_edit">سحب المؤشر والحذف</string>
+    <string name="swipe_edit_sub">اضغط مطولاً على المسافة واسحب لتحريك المؤشر، واسحب على زر الحذف لمسح كلمات كاملة</string>
+    <string name="one_handed">وضع اليد الواحدة</string>
+    <string name="one_handed_sub">مفاتيح أضيق في جهة واحدة. اضغط مطولاً على زر الإيموجي للتشغيل أو الإيقاف</string>
+    <string name="emoji_search_hint">ابحث عن إيموجي</string>
 </resources>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Anon Keyboard</string>
-    <color name="ic_launcher_background">#26282D</color>
+    <string name="app_name">Hudhud Keyboard</string>
+    <color name="ic_launcher_background">#0F3A40</color>
 
     <string name="enable_keyboard">Enable keyboard</string>
     <string name="choose_keyboard">Choose keyboard</string>
@@ -75,4 +75,11 @@
     <string name="animations_sub">Key fades, popups and panels</string>
     <string name="credit_text">Word lists: FrequencyWords by Hermit Dave, CC BY-SA 4.0. Word pairs: Tatoeba, CC BY 2.0 FR.</string>
     <string name="theme_material">Material You</string>
+    <string name="glide">Glide typing</string>
+    <string name="glide_sub">Slide across the letters without lifting your finger</string>
+    <string name="swipe_edit">Cursor and delete swipes</string>
+    <string name="swipe_edit_sub">Hold space and drag to move the cursor; slide on delete to remove whole words</string>
+    <string name="one_handed">One-handed mode</string>
+    <string name="one_handed_sub">Narrower keys on one side. Long-press the emoji key to turn it on or off</string>
+    <string name="emoji_search_hint">Search emoji</string>
 </resources>

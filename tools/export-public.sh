@@ -11,6 +11,6 @@ git ls-files | grep -vE "$(cat tools/private-paths.txt 2>/dev/null || echo '^res
 cd "$dst"
 git init -q -b main
 git add -A
-git -c user.name=Altayeb -c user.email=altybanony@gmail.com commit -q -m "Anon Keyboard"
+git -c user.name=Altayeb -c user.email=altybanony@gmail.com commit -q -m "Hudhud Keyboard"
 gitleaks git --no-banner --redact . && echo "gitleaks: clean"
 echo "exported $(git ls-files | wc -l) files to $dst"

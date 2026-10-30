@@ -9,5 +9,5 @@ plugins {
 dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
-rootProject.name = "anon-keyboard"
+rootProject.name = "hudhud"
 include(":app")

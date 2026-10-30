@@ -14,6 +14,9 @@ data class Prefs(
     val doubleSpacePeriod: Boolean = true,
     val vibrate: Boolean = true,
     val sound: Boolean = false,
+    val glide: Boolean = true,
+    val swipeEdit: Boolean = true,        // hold + drag on space = cursor, slide on delete = words
+    val oneHanded: Int = 0,               // -1 left, 0 off, +1 right
     val numberRow: Boolean = false,
     val hints: Boolean = true,
     val keyHeight: Int = 100, // percent, 80..140
@@ -42,6 +45,9 @@ data class Prefs(
                 doubleSpacePeriod = p.getBoolean("doubleSpacePeriod", d.doubleSpacePeriod),
                 vibrate = p.getBoolean("vibrate", d.vibrate),
                 sound = p.getBoolean("sound", d.sound),
+                glide = p.getBoolean("glide", d.glide),
+                swipeEdit = p.getBoolean("swipeEdit", d.swipeEdit),
+                oneHanded = p.getInt("oneHanded", d.oneHanded).coerceIn(-1, 1),
                 numberRow = p.getBoolean("numberRow", d.numberRow),
                 hints = p.getBoolean("hints", d.hints),
                 keyHeight = p.getInt("keyHeight", d.keyHeight).coerceIn(80, 140),

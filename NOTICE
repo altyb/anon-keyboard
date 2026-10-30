@@ -1,4 +1,4 @@
-Anon Keyboard
+Hudhud Keyboard
 Copyright 2026 Altayeb
 
 This product includes word frequency data from FrequencyWords
@@ -12,3 +12,5 @@ This product includes sentence data from Tatoeba (https://tatoeba.org),
 licensed CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).
 Word-pair counts in app/src/main/assets/en.bigrams and ar.bigrams were derived from it
 with tools/bigrams.py.
+
+Emoji names from Unicode CLDR annotations, (c) Unicode, Inc., Unicode License v3.

@@ -113,6 +113,7 @@ private fun SettingsScreen(prefs: SharedPreferences) {
     val version = remember { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
     var typed by remember { mutableStateOf("") }
     var height by remember { mutableIntStateOf(prefs.getInt("keyHeight", d.keyHeight).coerceIn(80, 140)) }
+    var hand by remember { mutableIntStateOf(prefs.getInt("oneHanded", d.oneHanded)) }
     var askWords by remember { mutableStateOf(false) }
     var askClips by remember { mutableStateOf(false) }
 
@@ -193,6 +194,8 @@ private fun SettingsScreen(prefs: SharedPreferences) {
             }
             item {
                 Group(R.string.group_typing) {
+                    Flag("glide", d.glide, R.string.glide, R.string.glide_sub)
+                    Flag("swipeEdit", d.swipeEdit, R.string.swipe_edit, R.string.swipe_edit_sub)
                     Flag("autoCaps", d.autoCaps, R.string.auto_caps, R.string.auto_caps_sub)
                     Flag("doubleSpacePeriod", d.doubleSpacePeriod, R.string.double_space, R.string.double_space_sub)
                     Flag("vibrate", d.vibrate, R.string.vibrate, R.string.vibrate_sub)
@@ -202,6 +205,10 @@ private fun SettingsScreen(prefs: SharedPreferences) {
             item { LookGroup(d) }
             item {
                 Group(R.string.group_layout) {
+                    SwitchRow(R.string.one_handed, R.string.one_handed_sub, hand != 0) {
+                        hand = if (it) 1 else 0
+                        prefs.edit().putInt("oneHanded", hand).apply()
+                    }
                     Flag("numberRow", d.numberRow, R.string.number_row, R.string.number_row_sub)
                     Flag("hints", d.hints, R.string.hints, R.string.hints_sub)
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {

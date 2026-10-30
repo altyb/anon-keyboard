@@ -28,11 +28,24 @@ class KeyboardView(context: Context) : View(context) {
         fun onSpecialLongPress(code: Int)
         /** Finger slid sideways on space: [dir] is +1 or -1 → next/previous language. */
         fun onSwipeSpace(dir: Int)
+        /** Held then dragged on space: move the cursor one step left (-1) or right (+1) on screen. */
+        fun onCursor(dir: Int)
+        /** Slid sideways on delete: remove one more word. */
+        fun onDeleteWord()
+        /** Finished glide in key units, with where each letter's keys are in the same units. */
+        fun onGlide(path: FloatArray, centers: Map<Char, List<FloatArray>>)
+        /** One-handed side changed from the keyboard: -1 left, 0 off, +1 right. */
+        fun onHand(side: Int)
     }
 
     var listener: Listener? = null
     var shifted: Boolean = false
         set(v) { field = v; invalidate() }
+    var glideEnabled = false
+    var swipeEdit = false   // hold + drag on space moves the cursor, slide on delete removes words
+    /** One-handed: -1 keys on the left, +1 on the right, 0 full width. Only key widths change. */
+    var hand = 0
+        set(v) { if (field != v) { field = v; computeRects(); invalidate() } }
 
     // dp → px. Density, not sp, so the system font scale does not change the keyboard.
     private val density = resources.displayMetrics.density
@@ -98,6 +111,20 @@ class KeyboardView(context: Context) : View(context) {
     private var pressedPointer = -1
     private var longFired = false
     private var downX = 0f
+    private var downY = 0f
+
+    private var keyUnit = 1f     // one key across, gap included: the unit a glide is measured in
+    private var spaceHeld = false // space was held still long enough: a drag now moves the cursor
+
+    // Glide: the finger's path in px; drawn as a trail, handed over in key units on release.
+    private var gliding = false
+    private val glidePts = FloatArray(MAX_GLIDE_POINTS * 2)
+    private var glideCount = 0
+    private val trail = Path()
+    private val trailPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeWidth = 3f * density
+        strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
+    }
 
     // Long-press popup: choices of key [popupKey], drawn in [popupRect], [popupSel] under the finger.
     private var popupKey = -1
@@ -136,11 +163,15 @@ class KeyboardView(context: Context) : View(context) {
         val choices = popups[i]
         longFired = true
         when {
-            code == Codes.SPACE || code == Codes.SYMBOLS -> listener?.onSpecialLongPress(code)
+            code == Codes.SPACE || code == Codes.SYMBOLS || code == Codes.EMOJI -> listener?.onSpecialLongPress(code)
             choices.size == 1 -> listener?.onLongPress(choices[0])
             choices.size > 1 -> openPopup(i)
             else -> longFired = false
         }
+    }
+    private val spaceHoldTask = Runnable {
+        spaceHeld = true
+        if (vibrate) performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
     }
     private val deleteRepeat: Runnable = object : Runnable {
         override fun run() {
@@ -169,6 +200,7 @@ class KeyboardView(context: Context) : View(context) {
         popupSelLabelPaint.color = t.onAccent
         hintPaint.color = t.hint
         spacePaint.color = t.accent
+        trailPaint.color = t.accent
         iconFill.color = t.specialLabel
         iconOnCyan.color = t.onAccent
         iconCut.color = t.special
@@ -178,6 +210,7 @@ class KeyboardView(context: Context) : View(context) {
 
     /** Apply a layout and display settings; recomputes key rectangles. [spaceLabel] = language name on space. */
     fun setLayout(layout: Layout, keyHeightPercent: Int, showHints: Boolean, vibrate: Boolean, spaceLabel: String) {
+        cancelGlide()
         releasePressed(fire = false)
         this.showHints = showHints
         this.vibrate = vibrate
@@ -226,7 +259,9 @@ class KeyboardView(context: Context) : View(context) {
         val rows = rowStart.size - 1
         val w = width.toFloat()
         if (rows <= 0 || w <= 0f) return
-        val avail = w - 2 * sidePad
+        val full = w - 2 * sidePad
+        val avail = if (hand == 0) full else full * ONE_HAND_WIDTH
+        val startX = if (hand > 0) w - sidePad - avail else sidePad
 
         var unit = Float.MAX_VALUE
         for (r in 0 until rows) {
@@ -236,6 +271,7 @@ class KeyboardView(context: Context) : View(context) {
             if (units > 0f) unit = minOf(unit, (avail - gaps) / units)
         }
         popupCell = unit
+        keyUnit = unit + hGap
 
         for (r in 0 until rows) {
             val start = rowStart[r]
@@ -243,7 +279,7 @@ class KeyboardView(context: Context) : View(context) {
             var units = 0f
             for (i in start until end) units += keys[i].width
             val rowW = units * unit + (end - start - 1) * hGap
-            var x = sidePad + (avail - rowW) / 2f
+            var x = startX + (avail - rowW) / 2f
             val top = topPad + r * (keyH + vGap)
             for (i in start until end) {
                 val kw = keys[i].width * unit
@@ -329,7 +365,33 @@ class KeyboardView(context: Context) : View(context) {
             }
             if (scale != 1f) canvas.restore()
         }
+        if (hand != 0) drawHandBar(canvas)
         if (popupKey >= 0) drawPopup(canvas)
+        if (gliding) canvas.drawPath(trail, trailPaint)
+    }
+
+    /** The free side in one-handed mode: top half moves the keys across, bottom half goes back to full width. */
+    private fun drawHandBar(canvas: Canvas) {
+        val w = width * (1f - ONE_HAND_WIDTH)
+        val cx = if (hand > 0) w / 2f else width - w / 2f
+        val s = keyH * 0.17f
+        val dir = if (hand > 0) -1f else 1f // arrow points where the keys would go
+        val y1 = height * 0.3f
+        path.reset()
+        path.moveTo(cx - dir * s * 0.5f, y1 - s)
+        path.lineTo(cx + dir * s * 0.5f, y1)
+        path.lineTo(cx - dir * s * 0.5f, y1 + s)
+        canvas.drawPath(path, iconStroke)
+        val y2 = height * 0.7f
+        rectF.set(cx - s, y2 - s * 0.8f, cx + s, y2 + s * 0.8f)
+        canvas.drawRoundRect(rectF, corner, corner, iconStroke)
+    }
+
+    /** True if [x] is on the free side in one-handed mode. */
+    private fun onHandBar(x: Float): Boolean {
+        if (hand == 0) return false
+        val w = width * (1f - ONE_HAND_WIDTH)
+        return if (hand > 0) x < w else x > width - w
     }
 
     /** Draws the icon for special keys; false = no icon, draw the text label. */
@@ -441,33 +503,55 @@ class KeyboardView(context: Context) : View(context) {
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
                 val p = e.actionIndex
+                if (gliding) return true // a stray second finger does not end the glide
+                if (e.actionMasked == MotionEvent.ACTION_DOWN && onHandBar(e.getX(p))) {
+                    listener?.onHand(if (e.getY(p) < height / 2f) -hand else 0)
+                    return true
+                }
                 val idx = hitTest(e.getX(p), e.getY(p))
                 if (idx >= 0) {
                     // Fast typing with a second finger: the first key lands now.
                     releasePressed(fire = true)
-                    pressKey(idx, e.getPointerId(p), e.getX(p))
+                    pressKey(idx, e.getPointerId(p), e.getX(p), e.getY(p))
                 }
             }
             MotionEvent.ACTION_MOVE -> {
                 val p = e.findPointerIndex(pressedPointer)
-                if (p >= 0) onMove(e.getX(p))
+                if (p >= 0) onMove(e.getX(p), e.getY(p))
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                if (pressedIndex >= 0 && e.getPointerId(e.actionIndex) == pressedPointer) {
-                    releasePressed(fire = true)
+                if (e.getPointerId(e.actionIndex) == pressedPointer) {
+                    if (gliding) finishGlide() else if (pressedIndex >= 0) releasePressed(fire = true)
                 }
             }
-            MotionEvent.ACTION_CANCEL -> releasePressed(fire = false)
+            MotionEvent.ACTION_CANCEL -> { cancelGlide(); releasePressed(fire = false) }
         }
         return true
     }
 
-    private fun onMove(x: Float) {
+    private fun onMove(x: Float, y: Float) {
+        if (gliding) { addGlidePoint(x, y); return }
         val i = pressedIndex
         if (i < 0) return
         if (popupKey >= 0) {
             val sel = ((x - popupRect.left) / popupCell).toInt().coerceIn(0, popups[popupKey].size - 1)
             if (sel != popupSel) { popupSel = sel; invalidate() }
+        } else if (keys[i].code == Codes.SPACE && spaceHeld) {
+            touchHandler.removeCallbacks(longPressTask)
+            longFired = true
+            val step = keyUnit / 3f
+            while (abs(x - downX) > step) {
+                val dir = if (x > downX) 1 else -1
+                listener?.onCursor(dir)
+                downX += dir * step
+            }
+        } else if (keys[i].code == Codes.DELETE && swipeEdit && abs(x - downX) > swipeStep) {
+            touchHandler.removeCallbacks(deleteRepeat)
+            listener?.onDeleteWord()
+            downX = x
+        } else if (glideEnabled && !longFired && keys[i].code > 0 && Character.isLetter(keys[i].code) &&
+            abs(x - downX) + abs(y - downY) > keyUnit * GLIDE_START) {
+            startGlide(x, y)
         } else if (keys[i].code == Codes.SPACE && abs(x - downX) > swipeStep) {
             touchHandler.removeCallbacks(longPressTask)
             longFired = true // the release must not type a space
@@ -476,16 +560,67 @@ class KeyboardView(context: Context) : View(context) {
         }
     }
 
-    private fun pressKey(i: Int, pointerId: Int, x: Float) {
+    private fun startGlide(x: Float, y: Float) {
+        touchHandler.removeCallbacks(longPressTask)
+        pressedIndex = -1
+        gliding = true
+        glideCount = 0
+        trail.reset()
+        trail.moveTo(downX, downY)
+        addGlidePoint(downX, downY)
+        addGlidePoint(x, y)
+    }
+
+    private fun addGlidePoint(x: Float, y: Float) {
+        if (glideCount < MAX_GLIDE_POINTS) {
+            glidePts[2 * glideCount] = x
+            glidePts[2 * glideCount + 1] = y
+            glideCount++
+        }
+        trail.lineTo(x, y)
+        invalidate()
+    }
+
+    private fun finishGlide() {
+        val rowH = keyH + vGap
+        val path = FloatArray(glideCount * 2) { if (it % 2 == 0) glidePts[it] / keyUnit else glidePts[it] / rowH }
+        val centers = HashMap<Char, MutableList<FloatArray>>()
+        for (i in keys.indices) {
+            val code = keys[i].code
+            if (code <= 0 || !Character.isLetter(code)) continue
+            val c = Normalize.key(String(Character.toChars(code))).singleOrNull() ?: continue
+            centers.getOrPut(c) { ArrayList(1) }.add(floatArrayOf(
+                (rects[i * 4] + rects[i * 4 + 2]) / 2f / keyUnit,
+                (rects[i * 4 + 1] + rects[i * 4 + 3]) / 2f / rowH,
+            ))
+        }
+        cancelGlide()
+        listener?.onGlide(path, centers)
+    }
+
+    private fun cancelGlide() {
+        if (!gliding) return
+        gliding = false
+        pressedPointer = -1
+        invalidate()
+    }
+
+    private fun pressKey(i: Int, pointerId: Int, x: Float, y: Float) {
         pressedIndex = i
         pressedPointer = pointerId
         longFired = false
         downX = x
+        downY = y
+        spaceHeld = false
         val k = keys[i]
         if (k.code == Codes.DELETE) {
             listener?.onKey(k.code)
             touchHandler.postDelayed(deleteRepeat, 400)
-        } else if (popups[i].isNotEmpty() || k.code == Codes.SPACE || k.code == Codes.SYMBOLS) {
+        } else if (k.code == Codes.SPACE && swipeEdit) {
+            // A quick flick still switches language; only a held space turns into a cursor.
+            touchHandler.postDelayed(spaceHoldTask, 250)
+            touchHandler.postDelayed(longPressTask, 800)
+        } else if (popups[i].isNotEmpty() || k.code == Codes.SPACE || k.code == Codes.SYMBOLS || k.code == Codes.EMOJI) {
             touchHandler.postDelayed(longPressTask, 400)
         }
         if (vibrate) performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
@@ -496,6 +631,7 @@ class KeyboardView(context: Context) : View(context) {
         val i = pressedIndex
         if (i < 0) return
         touchHandler.removeCallbacks(longPressTask)
+        touchHandler.removeCallbacks(spaceHoldTask)
         touchHandler.removeCallbacks(deleteRepeat)
         val code = keys[i].code
         val popup = popupKey
@@ -541,7 +677,12 @@ class KeyboardView(context: Context) : View(context) {
         super.onDetachedFromWindow()
     }
 
-    private companion object { val KEY_COLOR = Color.parseColor("#474747") }
+    private companion object {
+        val KEY_COLOR = Color.parseColor("#474747")
+        const val ONE_HAND_WIDTH = 0.82f
+        const val GLIDE_START = 0.6f     // key widths the finger must travel before a press becomes a glide
+        const val MAX_GLIDE_POINTS = 1024
+    }
 
     private fun fill(hex: String): Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor(hex)
