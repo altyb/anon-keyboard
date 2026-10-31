@@ -105,3 +105,5 @@ Word frequency lists from [hermitdave/FrequencyWords](https://github.com/hermitd
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
+
+Rights holders can report a problem to altybanony@gmail.com.
