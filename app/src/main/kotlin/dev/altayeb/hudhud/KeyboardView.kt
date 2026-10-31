@@ -1,4 +1,4 @@
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter

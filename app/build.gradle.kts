@@ -5,27 +5,27 @@ plugins {
 }
 
 android {
-    namespace = "dev.altayeb.anon"
+    namespace = "dev.altayeb.hudhud"
     compileSdk = 36
     defaultConfig {
-        applicationId = "dev.altayeb.anon"
+        applicationId = "dev.altayeb.hudhud"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.2.1"
+        versionCode = 7
+        versionName = "1.3.0"
     }
-    // Release key lives outside the repo; set ANON_KS / ANON_KS_PASS / ANON_KEY_ALIAS to sign.
+    // Release key lives outside the repo; set HUDHUD_KS / HUDHUD_KS_PASS / HUDHUD_KEY_ALIAS to sign.
     signingConfigs {
         create("release") {
-            System.getenv("ANON_KS")?.let { storeFile = file(it) }
-            storePassword = System.getenv("ANON_KS_PASS")
-            keyAlias = System.getenv("ANON_KEY_ALIAS")
-            keyPassword = System.getenv("ANON_KS_PASS")
+            System.getenv("HUDHUD_KS")?.let { storeFile = file(it) }
+            storePassword = System.getenv("HUDHUD_KS_PASS")
+            keyAlias = System.getenv("HUDHUD_KEY_ALIAS")
+            keyPassword = System.getenv("HUDHUD_KS_PASS")
         }
     }
     buildTypes {
         release {
-            if (System.getenv("ANON_KS") != null) signingConfig = signingConfigs.getByName("release")
+            if (System.getenv("HUDHUD_KS") != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))

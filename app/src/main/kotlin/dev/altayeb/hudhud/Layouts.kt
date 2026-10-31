@@ -1,4 +1,4 @@
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 /** Special key codes. Letters use their Unicode code point. */
 object Codes {

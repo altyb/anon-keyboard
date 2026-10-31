@@ -25,13 +25,15 @@ Sister app: [Shoebill](https://github.com/altyb/shoebill), a private video playe
 
 ## Install
 
-1. Download `hudhud-1.2.1.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
+1. Download `hudhud-1.3.0.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
 2. Open it and allow installing from your browser or file manager if Android asks.
 3. Open **Hudhud Keyboard**, tap **Enable keyboard**, switch it on, then **Choose keyboard**.
 
 Check the file before installing if you like: the SHA-256 is listed on the release page.
 
 Using the F-Droid app? Add my own repo under Settings, Repositories: `https://altyb.github.io/fdroid/repo?fingerprint=4882F491E55FA2B5630EBA1409087C2DC2F404E8786813D0E60B13569CC1040A`. These are the same signed APKs as the GitHub releases. The apps are not in the main F-Droid catalogue yet.
+
+**Installed a version before 1.3.0?** It will not update, because the app ID changed. In the old app save a backup in Settings. Install the new app, restore the file there, then turn the new keyboard on and remove the old one.
 
 ## Why I made it
 

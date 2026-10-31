@@ -1,4 +1,4 @@
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -212,7 +212,7 @@ class Trie private constructor(private val buf: MappedByteBuffer) {
     private class Item(val node: Int, val prio: Int, val isWord: Boolean)
 
     companion object {
-        private const val MAGIC = 0x414E5431 // "ANT1"
+        private const val MAGIC = 0x48485431 // "HHT1"
         private const val HEADER = 16
         private const val RECORD = 26
         private const val MAX_WORD = 32

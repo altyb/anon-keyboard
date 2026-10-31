@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 import android.content.Context
 import android.Manifest

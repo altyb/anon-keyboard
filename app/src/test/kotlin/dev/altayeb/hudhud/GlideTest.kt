@@ -1,4 +1,4 @@
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -167,6 +167,17 @@ class BackupTest {
         assertEquals(mapOf("glide" to "false", "keyHeight" to "110"), d.prefs)
         val restored = UserDict(d.dict!!).also { it.load() }
         assertTrue(restored.count("altayeb") > 0)
+    }
+
+    @Test fun dictionaryFromBeforeTheRenameStillLoads() {
+        val f = File(tmp.root, "old.dict")
+        java.io.DataOutputStream(f.outputStream()).use { o ->
+            o.writeInt(0x414E5544); o.writeInt(1) // "ANUD", version 1
+            o.writeInt(1); o.writeUTF("altayeb"); o.writeUTF("altayeb"); o.writeFloat(3f)
+            o.writeInt(0)
+        }
+        assertTrue(UserDict.isValid(f))
+        assertTrue(UserDict(f).also { it.load() }.count("altayeb") == 3)
     }
 
     @Test(expected = java.io.IOException::class) fun rejectsOtherFiles() {

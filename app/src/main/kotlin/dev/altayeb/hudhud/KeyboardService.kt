@@ -1,4 +1,4 @@
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 import android.Manifest
 import android.content.ClipDescription
@@ -40,7 +40,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     private var emojiPanel: EmojiPanel? = null
 
     private val main = Handler(Looper.getMainLooper())
-    private val workerThread = HandlerThread("anon-engine").apply { start() }
+    private val workerThread = HandlerThread("hudhud-engine").apply { start() }
     private val worker = Handler(workerThread.looper)
 
     // Worker-only state.

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.0 (2026-10-31)
+New app ID, `dev.altayeb.hudhud`. This installs as a new keyboard: save a backup in the old app, restore it here, then turn the new keyboard on.
+
 ## 1.2.1 (2026-10-31)
 The question mark is on the same key in every language. Long-press offers both ? and ؟ everywhere. Arabic punctuation on the Arabic symbols page. French gets its ? hint.
 

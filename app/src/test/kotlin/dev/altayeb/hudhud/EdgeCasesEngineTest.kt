@@ -1,4 +1,4 @@
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

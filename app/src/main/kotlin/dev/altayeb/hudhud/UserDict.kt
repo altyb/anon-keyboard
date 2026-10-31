@@ -1,4 +1,4 @@
-package dev.altayeb.anon
+package dev.altayeb.hudhud
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -31,7 +31,7 @@ class UserDict(private val file: File) {
         if (file.exists()) {
             try {
                 DataInputStream(BufferedInputStream(FileInputStream(file))).use { din ->
-                    require(din.readInt() == MAGIC && din.readInt() == VERSION)
+                    require(din.readInt() in MAGICS && din.readInt() == VERSION)
                     repeat(din.readInt()) {
                         val key = din.readUTF()
                         val display = din.readUTF()
@@ -215,7 +215,7 @@ class UserDict(private val file: File) {
         /** True if [f] parses completely as a saved dictionary. */
         fun isValid(f: File): Boolean = try {
             DataInputStream(BufferedInputStream(FileInputStream(f))).use { din ->
-                if (din.readInt() != MAGIC || din.readInt() != VERSION) return false
+                if (din.readInt() !in MAGICS || din.readInt() != VERSION) return false
                 repeat(din.readInt()) { din.readUTF(); din.readUTF(); din.readFloat() }
                 repeat(din.readInt()) { din.readUTF(); din.readUTF(); din.readUTF(); din.readFloat() }
                 true
@@ -228,7 +228,8 @@ class UserDict(private val file: File) {
         const val FADE_EVERY = 500      // learned words between fades
         const val FADE_FACTOR = 0.9
 
-        private const val MAGIC = 0x414E5544 // "ANUD"
+        private const val MAGIC = 0x48485544 // "HHUD"
+        private val MAGICS = intArrayOf(MAGIC, 0x414E5544) // "ANUD": files from before 1.3.0, so old backups restore
         private const val VERSION = 1
         private const val CONTACT_BOOST = 20f
         private val WHITESPACE = Regex("\\s+")
