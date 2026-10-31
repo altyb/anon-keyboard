@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.1 (2026-10-31)
+The question mark is on the same key in every language. Long-press offers both ? and ؟ everywhere. Arabic punctuation on the Arabic symbols page. French gets its ? hint.
+
 ## 1.2.0 (2026-10-31)
 French, Spanish, German, Portuguese and Russian. All Unicode emoji with skin tones. Edit buttons. Voice hand-off to a voice keyboard you installed. Backup and restore. Light theme and accent colours. Split layout on wide screens. Copied images in clipboard history. Licenses screen and privacy policy. Landscape keys now fit the screen.
 

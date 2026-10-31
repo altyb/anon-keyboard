@@ -240,7 +240,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
                 }
             }
             Codes.SPACE -> onSpace(ic)
-            Codes.SYMBOLS -> { applyLayout("symbols"); return }
+            Codes.SYMBOLS -> { applyLayout(if (lang == "ar") "symbols-ar" else "symbols"); return }
             Codes.LETTERS -> { applyLayout(lang); return }
             Codes.LANG -> nextLanguage(1)
             Codes.CLIPBOARD -> { showClipPanel(); return }
@@ -681,7 +681,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         when (code) {
             Codes.DELETE -> bar.show(bar.query.dropLast(1), findEmoji(bar.query.dropLast(1)))
             Codes.ENTER -> bar.results.firstOrNull()?.let { onSearchPick(it) }
-            Codes.SYMBOLS -> applyLayout("symbols")
+            Codes.SYMBOLS -> applyLayout(if (lang == "ar") "symbols-ar" else "symbols")
             Codes.LETTERS -> applyLayout(lang)
             Codes.EMOJI -> onSearchClose()
             Codes.SHIFT, Codes.LANG, Codes.CLIPBOARD -> Unit

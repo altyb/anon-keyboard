@@ -25,7 +25,7 @@ Formerly Anon Keyboard. Sister app: [Shoebill](https://github.com/altyb/shoebill
 
 ## Install
 
-1. Download `hudhud-1.2.0.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
+1. Download `hudhud-1.2.1.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
 2. Open it and allow installing from your browser or file manager if Android asks.
 3. Open **Hudhud Keyboard**, tap **Enable keyboard**, switch it on, then **Choose keyboard**.
 
@@ -56,6 +56,7 @@ So I wrote my own. The rules were: it has to stay light on any Android phone, no
 - **Clipboard.** Recent copies, including images where the app you type in accepts them, pin the ones you want to keep, and a paste chip in the suggestion row for what you just copied.
 - **Emoji panel** with recents and search by English or Arabic name.
 - **Two looks.** Classic (the default, above) or Material You: rounder keys in your wallpaper colours with a springy press. Key sizes and layout are the same in both.
+- **Both question marks.** `?` and `؟` are a long-press away in every language.
 - **Calm motion.** Short fades and slides with one shared timing, never on the key press itself. Off with one switch, and off automatically when Android's "Remove animations" is on.
 
 ## Privacy

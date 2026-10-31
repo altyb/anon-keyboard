@@ -211,3 +211,37 @@ class LanguagesTest {
         assertEquals(listOf("content://a/2", "content://a/1"), h.items().map { it.uri })
     }
 }
+
+class PunctuationPlaceTest {
+    @Test fun questionMarkIsBesideDeleteInEveryLanguage() {
+        for (lang in Layouts.ALL.keys) for (numberRow in listOf(false, true)) {
+            val row = Layouts.get(lang, numberRow).rows.first { r -> r.any { it.code == Codes.DELETE } }
+            val want = if (lang == "ar") "؟" else "?"
+            assertEquals("$lang numberRow=$numberRow", want, row[row.size - 2].hint)
+        }
+    }
+
+    @Test fun bothQuestionMarksAreReachableEverywhereWithTheLanguagesOwnFirst() {
+        for (lang in Layouts.ALL.keys) {
+            val own = if (lang == "ar") "؟" else "?"
+            val other = if (lang == "ar") "?" else "؟"
+            val keys = Layouts.get(lang, false).rows.flatten()
+            val beside = keys.first { it.hint == own }
+            assertEquals(listOf(own, other), beside.popup.takeLast(2).let { if (beside.popup.first() == own) listOf(own, other) else it })
+            assertTrue(lang, other in beside.popup)
+            val dot = keys.first { it.code == '.'.code }
+            assertEquals(lang, listOf(own, other), dot.popup.take(2))
+        }
+        for (id in listOf("symbols", "symbols-ar")) {
+            val mark = Layouts.get(id, false).rows.flatten().first { it.label == "?" || it.label == "؟" }
+            assertEquals(id, 1, mark.popup.size)
+        }
+    }
+
+    @Test fun arabicSymbolsUseArabicPunctuation() {
+        val labels = Layouts.get("symbols-ar", false).rows.flatten().map { it.label }
+        assertTrue("؟" in labels && "،" in labels && "؛" in labels)
+        assertTrue("?" !in labels && ";" !in labels)
+        assertTrue("?" in Layouts.get("symbols", false).rows.flatten().map { it.label })
+    }
+}

@@ -44,13 +44,14 @@ object Layouts {
     private val cache = HashMap<String, Layout>()
 
     fun get(id: String, numberRow: Boolean): Layout {
-        val real = if (id in ALL || id == "symbols" || id == "numbers") id else "en"
+        val real = if (id in ALL || id == "symbols" || id == "symbols-ar" || id == "numbers") id else "en"
         return cache.getOrPut("$real/$numberRow") { build(real, numberRow) }
     }
 
     private fun build(id: String, numberRow: Boolean): Layout = when (id) {
         "ar" -> arabic(numberRow)
         "symbols" -> symbols()
+        "symbols-ar" -> symbols(arabic = true)
         "numbers" -> numbers()
         "fr" -> latin("fr", numberRow, "a z e r t y u i o p", "q s d f g h j k l m", "w x c v b n")
         "es" -> latin("es", numberRow, "q w e r t y u i o p", "a s d f g h j k l ñ", "z x c v b n m")
@@ -58,6 +59,15 @@ object Layouts {
         "pt" -> latin("pt", numberRow, "q w e r t y u i o p", "a s d f g h j k l ç", "z x c v b n m")
         "ru" -> latin("ru", numberRow, "й ц у к е н г ш щ з х", "ф ы в а п р о л д ж э", "я ч с м и т ь б ю")
         else -> english(numberRow)
+    }
+
+    private val LATIN_PUNCT = listOf("*", "\"", "'", ":", ";", "!", "?")
+    private val ARABIC_PUNCT = listOf("*", "\"", "'", ":", "؛", "!", "؟")
+
+    /** Hints for a bottom letter row, counted from its end: "?" is on the key beside delete in every language. */
+    private fun punctHints(letters: String, punct: List<String> = LATIN_PUNCT): List<String> {
+        val n = letters.split(" ").size
+        return if (n >= punct.size) List(n - punct.size) { "" } + punct else punct.takeLast(n)
     }
 
     /** Accented letters and look-alikes offered on long-press, by base letter. */
@@ -72,7 +82,8 @@ object Layouts {
     /** Letters: label = uppercase (or the letter itself for Arabic), code = its code point. */
     private fun letterRow(letters: String, hints: List<String> = emptyList()): List<Key> =
         letters.split(" ").mapIndexed { i, c ->
-            Key(c.uppercase(), c[0].code, hints.getOrElse(i) { "" }, alts = ALTS[c].orEmpty())
+            val hint = hints.getOrElse(i) { "" }
+            Key(c.uppercase(), c[0].code, hint, alts = ALTS[c].orEmpty() + otherQuestionMark(hint))
         }
 
     /** Top letter row: digits as hints when there is no number row, symbols otherwise (symbol moves to the popup). */
@@ -95,7 +106,14 @@ object Layouts {
     private fun digitRow(hints: List<String> = emptyList()): List<Key> =
         "1234567890".mapIndexed { i, c -> Key(c.toString(), c.code, hints.getOrElse(i) { "" }) }
 
-    private fun chars(s: String): List<Key> = s.split(" ").map { Key(it, it[0].code) }
+    private fun chars(s: String): List<Key> = s.split(" ").map { Key(it, it[0].code, alts = otherQuestionMark(it)) }
+
+    /** Long-press on either question mark also offers the other shape, whatever the language. */
+    private fun otherQuestionMark(mark: String) = when (mark) {
+        "?" -> listOf("؟")
+        "؟" -> listOf("?")
+        else -> emptyList()
+    }
 
     private fun english(numberRow: Boolean): Layout {
         val rows = mutableListOf<List<Key>>()
@@ -103,9 +121,9 @@ object Layouts {
         rows += topRow("q w e r t y u i o p", "1234567890", listOf("%", "\\", "|", "=", "[", "]", "<", ">", "{", "}"), numberRow)
         rows += letterRow("a s d f g h j k l", listOf("@", "#", "$", "_", "&", "-", "+", "(", ")"))
         rows += listOf(Key("⇧", Codes.SHIFT, width = 1.5f)) +
-            letterRow("z x c v b n m", listOf("*", "\"", "'", ":", ";", "!", "?")) +
+            letterRow("z x c v b n m", punctHints("z x c v b n m")) +
             Key("⌫", Codes.DELETE, width = 1.5f)
-        rows += bottomRow("123", ",", ";", listOf("?", "!", ",", ";", ":", "…"))
+        rows += bottomRow("123", ",", ";", listOf("?", "؟", "!", ",", ";", ":", "…"))
         return Layout("en", rows, rtl = false)
     }
 
@@ -116,9 +134,9 @@ object Layouts {
         rows += topRow(top, "1234567890", listOf("%", "\\", "|", "=", "[", "]", "<", ">", "{", "}"), numberRow)
         rows += letterRow(middle, listOf("@", "#", "$", "_", "&", "-", "+", "(", ")"))
         rows += listOf(Key("⇧", Codes.SHIFT, width = 1.5f)) +
-            letterRow(bottom, listOf("*", "\"", "'", ":", ";", "!", "?")) +
+            letterRow(bottom, punctHints(bottom)) +
             Key("⌫", Codes.DELETE, width = 1.5f)
-        rows += bottomRow("123", ",", ";", listOf("?", "!", ",", ";", ":", "…"))
+        rows += bottomRow("123", ",", ";", listOf("?", "؟", "!", ",", ";", ":", "…"))
         return Layout(id, rows, rtl = false)
     }
 
@@ -127,26 +145,27 @@ object Layouts {
         if (numberRow) rows += digitRow(listOf("١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", "٠"))
         rows += topRow("ض ص ث ق ف غ ع ه خ ح ج", "١٢٣٤٥٦٧٨٩٠", emptyList(), numberRow)
         rows += letterRow("ش س ي ب ل ا ت ن م ك ط", listOf("", "", "ى", "", "لا", "أ"))
-        rows += letterRow("ذ ء ؤ ر ى ة و ز ظ د") + Key("⌫", Codes.DELETE, width = 1.5f)
-        rows += bottomRow("١٢٣", "،", "؛", listOf("؟", "!", "،", "؛", ":", "…"))
+        rows += letterRow("ذ ء ؤ ر ى ة و ز ظ د", punctHints("ذ ء ؤ ر ى ة و ز ظ د", ARABIC_PUNCT)) + Key("⌫", Codes.DELETE, width = 1.5f)
+        rows += bottomRow("١٢٣", "،", "؛", listOf("؟", "?", "!", "،", "؛", ":", "…"))
         return Layout("ar", rows, rtl = true)
     }
 
-    private fun symbols(): Layout {
+    private fun symbols(arabic: Boolean = false): Layout {
+        val comma = if (arabic) "،" else ","
         val rows = listOf(
             digitRow(),
             chars("@ # \$ _ & - + ( ) /"),
-            chars("* \" ' : ; ! ? ,") + Key("⌫", Codes.DELETE, width = 1.5f),
+            chars(if (arabic) "* \" ' : ؛ ! ؟ ،" else "* \" ' : ; ! ? ,") + Key("⌫", Codes.DELETE, width = 1.5f),
             listOf(
                 Key("ABC", Codes.LETTERS, width = 1.5f),
                 Key("☺", Codes.EMOJI),
-                Key(",", ','.code),
+                Key(comma, comma[0].code),
                 Key("", Codes.SPACE, width = 5f),
                 Key(".", '.'.code),
                 Key("↵", Codes.ENTER, width = 1.5f),
             ),
         )
-        return Layout("symbols", rows, rtl = false)
+        return Layout(if (arabic) "symbols-ar" else "symbols", rows, rtl = false)
     }
 
     private fun numbers(): Layout {
