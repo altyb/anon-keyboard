@@ -25,7 +25,7 @@ Sister app: [Shoebill](https://github.com/altyb/shoebill), a private video playe
 
 ## Install
 
-1. Download `hudhud-1.3.0.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
+1. Download `hudhud-1.3.1.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
 2. Open it and allow installing from your browser or file manager if Android asks.
 3. Open **Hudhud Keyboard**, tap **Enable keyboard**, switch it on, then **Choose keyboard**.
 

@@ -22,6 +22,19 @@ class RealDataTest {
         return Engine(Trie.open(out), UserDict(File(tmp.root, "u-$lang")).also { it.load() }) to ms
     }
 
+    @Test fun offensiveWordsAreNeverSuggested() {
+        val (en, _) = engine("en")
+        for (typed in listOf("fuc", "shi", "nigg", "cun", "my fuc")) {
+            val words = en.suggest(typed, false, true).words
+            assertTrue("$typed → $words", words.none { it.lowercase() in setOf("fuck", "fucking", "shit", "nigger", "nigga", "cunt") })
+        }
+        // the filter is exact: ordinary words that contain or sit near those stay
+        assertTrue(en.suggest("grapes", false, true).words.toString(), "grapes" in en.suggest("grapes", false, true).words)
+        assertTrue(en.suggest("shi", false, true).words.toString(), en.suggest("shi", false, true).words.isNotEmpty())
+        val (ar, _) = engine("ar")
+        assertTrue(ar.suggest("نيك", false, true).words.toString(), "نيك" !in ar.suggest("نيك", false, true).words)
+    }
+
     @Test fun englishPredictsNextWord() {
         val (e, ms) = engine("en")
         val next = e.suggest("how ", false, true).words
