@@ -32,6 +32,14 @@ data class KeyTheme(
             card = 0xFF2C2D2F.toInt(), textDim = 0xFF9E9E9E.toInt(),
         )
 
+        /** Light keys on pale grey, same shapes as classic. */
+        val LIGHT = KeyTheme(
+            bg = 0xFFD8DADD.toInt(), key = Color.WHITE, keyEdge = 0xFFB4B7BB.toInt(),
+            pressed = 0xFFBFC2C6.toInt(), label = 0xFF1A1A1A.toInt(), accent = 0xFF00708C.toInt(),
+            onAccent = Color.WHITE, hint = 0xFF6B6E73.toInt(), panel = 0xFFEEEFF1.toInt(),
+            card = Color.WHITE, textDim = 0xFF6B6E73.toInt(), special = 0xFFB9BCC1.toInt(),
+        )
+
         /** Material 3 baseline dark, used for "material" before Android 12 (no wallpaper colours there). */
         private val MATERIAL_BASE = KeyTheme(
             bg = 0xFF141218.toInt(), key = 0xFF36343B.toInt(), keyEdge = 0xFF36343B.toInt(),
@@ -46,7 +54,15 @@ data class KeyTheme(
          * "material" = Material You: rounder keys, tonal special keys, spring press, wallpaper colours on Android 12+.
          * "dynamic" = classic shapes with wallpaper colours. Anything else = classic.
          */
-        fun of(context: Context, name: String): KeyTheme {
+        fun of(context: Context, name: String, accent: Int = 0): KeyTheme {
+            val t = of(context, name)
+            if (accent == 0) return t
+            val lum = Color.luminance(accent)
+            return t.copy(accent = accent, specialLabel = accent, onAccent = if (lum > 0.4f) Color.BLACK else Color.WHITE)
+        }
+
+        private fun of(context: Context, name: String): KeyTheme {
+            if (name == "light") return LIGHT
             if (name == "material" && Build.VERSION.SDK_INT < 31) return MATERIAL_BASE
             if ((name != "dynamic" && name != "material") || Build.VERSION.SDK_INT < 31) return CLASSIC
             fun c(id: Int) = context.getColor(id)

@@ -6,7 +6,7 @@ This product includes word frequency data from FrequencyWords
 derived from OpenSubtitles. The data is licensed under the
 Creative Commons Attribution-ShareAlike 4.0 International License
 (https://creativecommons.org/licenses/by-sa/4.0/).
-Files: app/src/main/assets/en.tsv, app/src/main/assets/ar.tsv
+Files: app/src/main/assets/{en,ar,fr,es,de,pt,ru}.tsv
 
 This product includes sentence data from Tatoeba (https://tatoeba.org),
 licensed CC BY 2.0 FR (https://creativecommons.org/licenses/by/2.0/fr/).
@@ -14,3 +14,11 @@ Word-pair counts in app/src/main/assets/en.bigrams and ar.bigrams were derived f
 with tools/bigrams.py.
 
 Emoji names from Unicode CLDR annotations, (c) Unicode, Inc., Unicode License v3.
+
+Emoji list from Unicode emoji-test.txt, (c) Unicode, Inc., Unicode License v3.
+
+Download badges in docs/badges belong to their owners and are used only to link to each download:
+get-it-on-github.png by Kunzisoft (https://github.com/Kunzisoft/Github-badge), CC BY-SA 3.0, shows the GitHub logo.
+badge_obtainium.png from Obtainium (https://github.com/ImranR98/Obtainium).
+get-it-on.png from F-Droid. en_badge_web_generic.png from Google. IzzyOnDroid.png from IzzyOnDroid.
+Google Play and the Google Play logo are trademarks of Google LLC.

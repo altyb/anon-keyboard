@@ -42,6 +42,9 @@ class KeyboardView(context: Context) : View(context) {
     var shifted: Boolean = false
         set(v) { field = v; invalidate() }
     var glideEnabled = false
+    /** Keys part in the middle for two thumbs. Sizes shrink to make room, like one-handed mode. */
+    var split = false
+        set(v) { if (field != v) { field = v; computeRects(); invalidate() } }
     var swipeEdit = false   // hold + drag on space moves the cursor, slide on delete removes words
     /** One-handed: -1 keys on the left, +1 on the right, 0 full width. Only key widths change. */
     var hand = 0
@@ -217,6 +220,11 @@ class KeyboardView(context: Context) : View(context) {
         // LRM keeps the arrows in place around an Arabic name.
         this.spaceLabel = if (spaceLabel.isEmpty()) "" else "\u200E◂  $spaceLabel  ▸"
         keyH = 67f * density * keyHeightPercent / 100f // 67dp = Ginger at 100%
+        // Landscape has no room for portrait-height rows: the keys may take about half the screen height, strip aside.
+        val dm = resources.displayMetrics
+        if (dm.widthPixels > dm.heightPixels && layout.rows.isNotEmpty()) {
+            keyH = minOf(keyH, dm.heightPixels * 0.5f / layout.rows.size - vGap)
+        }
 
         val flat = ArrayList<Key>()
         rowStart = IntArray(layout.rows.size + 1)
@@ -262,13 +270,14 @@ class KeyboardView(context: Context) : View(context) {
         val full = w - 2 * sidePad
         val avail = if (hand == 0) full else full * ONE_HAND_WIDTH
         val startX = if (hand > 0) w - sidePad - avail else sidePad
+        val gap = if (split && hand == 0) w * SPLIT_GAP else 0f
 
         var unit = Float.MAX_VALUE
         for (r in 0 until rows) {
             var units = 0f
             for (i in rowStart[r] until rowStart[r + 1]) units += keys[i].width
             val gaps = (rowStart[r + 1] - rowStart[r] - 1) * hGap
-            if (units > 0f) unit = minOf(unit, (avail - gaps) / units)
+            if (units > 0f) unit = minOf(unit, (avail - gap - gaps) / units)
         }
         popupCell = unit
         keyUnit = unit + hGap
@@ -278,11 +287,18 @@ class KeyboardView(context: Context) : View(context) {
             val end = rowStart[r + 1]
             var units = 0f
             for (i in start until end) units += keys[i].width
-            val rowW = units * unit + (end - start - 1) * hGap
+            val rowW = units * unit + (end - start - 1) * hGap + gap
             var x = startX + (avail - rowW) / 2f
+            var done = 0f // units laid out so far: the gap goes in once half the row is down
+            var gapLeft = gap
             val top = topPad + r * (keyH + vGap)
             for (i in start until end) {
-                val kw = keys[i].width * unit
+                // A wide key on the middle (space) bridges the gap instead of leaving a hole in the row.
+                val across = gapLeft > 0f && keys[i].width >= 3f && done + keys[i].width > units / 2f
+                val kw = keys[i].width * unit + if (across) gapLeft else 0f
+                if (across) gapLeft = 0f
+                else if (gapLeft > 0f && done + keys[i].width / 2f >= units / 2f) { x += gapLeft; gapLeft = 0f }
+                done += keys[i].width
                 rects[i * 4] = x
                 rects[i * 4 + 1] = top
                 rects[i * 4 + 2] = x + kw
@@ -680,6 +696,7 @@ class KeyboardView(context: Context) : View(context) {
     private companion object {
         val KEY_COLOR = Color.parseColor("#474747")
         const val ONE_HAND_WIDTH = 0.82f
+        const val SPLIT_GAP = 0.22f
         const val GLIDE_START = 0.6f     // key widths the finger must travel before a press becomes a glide
         const val MAX_GLIDE_POINTS = 1024
     }

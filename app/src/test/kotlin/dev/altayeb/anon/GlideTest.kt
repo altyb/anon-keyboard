@@ -154,3 +154,60 @@ class EmojiSearchAndEditTest {
         assertEquals(5, wordDeleteLength("مرحبا ").let { it - 1 })
     }
 }
+
+class BackupTest {
+    @get:Rule val tmp = TemporaryFolder()
+
+    @Test fun roundTripKeepsWordsAndOnlyKnownSettings() {
+        val f = File(tmp.root, "user.dict")
+        UserDict(f).also { it.load(); repeat(3) { _ -> it.learn("altayeb", null) }; it.save() }
+        val out = java.io.ByteArrayOutputStream()
+        Backup.write(out, f, mapOf("glide" to false, "keyHeight" to 110, "wipeLearnedAt" to 5L, "emoji_recent" to "x"))
+        val d = Backup.read(out.toByteArray().inputStream(), File(tmp.root, "r.dict"))
+        assertEquals(mapOf("glide" to "false", "keyHeight" to "110"), d.prefs)
+        val restored = UserDict(d.dict!!).also { it.load() }
+        assertTrue(restored.count("altayeb") > 0)
+    }
+
+    @Test(expected = java.io.IOException::class) fun rejectsOtherFiles() {
+        Backup.read("not a zip".byteInputStream(), File(tmp.root, "r.dict"))
+    }
+
+    @Test(expected = java.io.IOException::class) fun rejectsDamagedDictionary() {
+        val out = java.io.ByteArrayOutputStream()
+        val bad = File(tmp.root, "user.dict").also { it.writeBytes(byteArrayOf(1, 2, 3)) }
+        Backup.write(out, bad, emptyMap<String, Any>())
+        Backup.read(out.toByteArray().inputStream(), File(tmp.root, "r.dict"))
+    }
+}
+
+class LanguagesTest {
+    @get:Rule val tmp = TemporaryFolder()
+
+    @Test fun everyLanguageHasALayoutAndADictionaryThatSuggests() {
+        val words = mapOf("en" to "hello", "ar" to "مرحبا", "fr" to "bonjour", "es" to "gracias", "de" to "danke", "pt" to "obrigado", "ru" to "спасибо")
+        assertEquals(Layouts.ALL.keys, words.keys)
+        for ((lang, word) in words) {
+            val layout = Layouts.get(lang, false)
+            assertEquals(lang, layout.id)
+            val out = tmp.newFile()
+            File("src/main/assets/$lang.tsv").useLines { Trie.build(it, emptySequence(), out) }
+            val e = Engine(Trie.open(out), UserDict(File(tmp.root, "u-$lang")).also { it.load() })
+            e.setLayout(layout)
+            assertTrue("$lang: $word", e.suggest(word.dropLast(1), false, false).words.map(Normalize::key).contains(Normalize.key(word)))
+        }
+    }
+
+    @Test fun enabledListIsCleanAndNeverEmpty() {
+        assertEquals(listOf("en", "fr"), Layouts.enabled("en,xx,fr,en"))
+        assertEquals(listOf("en"), Layouts.enabled(""))
+    }
+
+    @Test fun imageClipsKeepTheirAddressAndDifferentImagesBothStay() {
+        val h = ClipHistory()
+        h.add("Image", false, "content://a/1")
+        h.add("Image", false, "content://a/2")
+        h.add("Image", false, "content://a/2")
+        assertEquals(listOf("content://a/2", "content://a/1"), h.items().map { it.uri })
+    }
+}

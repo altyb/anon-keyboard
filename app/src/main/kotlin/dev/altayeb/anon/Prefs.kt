@@ -17,6 +17,8 @@ data class Prefs(
     val glide: Boolean = true,
     val swipeEdit: Boolean = true,        // hold + drag on space = cursor, slide on delete = words
     val oneHanded: Int = 0,               // -1 left, 0 off, +1 right
+    val languages: String = "en,ar",      // comma list, order = switching order
+    val split: Boolean = false,           // gap in the middle, on screens 600dp and wider only
     val numberRow: Boolean = false,
     val hints: Boolean = true,
     val keyHeight: Int = 100, // percent, 80..140
@@ -27,6 +29,7 @@ data class Prefs(
     // Look (colours and motion only, never sizes)
     val theme: String = "classic",        // "classic" (default) or "dynamic" (wallpaper colours, Android 12+)
     val animations: Boolean = true,
+    val accent: Int = 0,                  // 0 = the theme's own accent colour
 ) {
     companion object {
         const val FILE = "prefs"
@@ -48,6 +51,8 @@ data class Prefs(
                 glide = p.getBoolean("glide", d.glide),
                 swipeEdit = p.getBoolean("swipeEdit", d.swipeEdit),
                 oneHanded = p.getInt("oneHanded", d.oneHanded).coerceIn(-1, 1),
+                languages = p.getString("languages", d.languages) ?: d.languages,
+                split = p.getBoolean("split", d.split),
                 numberRow = p.getBoolean("numberRow", d.numberRow),
                 hints = p.getBoolean("hints", d.hints),
                 keyHeight = p.getInt("keyHeight", d.keyHeight).coerceIn(80, 140),
@@ -56,6 +61,7 @@ data class Prefs(
                 secureKeyboard = p.getBoolean("secureKeyboard", d.secureKeyboard),
                 theme = p.getString("theme", d.theme) ?: d.theme,
                 animations = p.getBoolean("animations", d.animations),
+                accent = p.getInt("accent", d.accent),
             )
         }
     }

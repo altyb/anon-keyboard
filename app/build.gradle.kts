@@ -11,8 +11,8 @@ android {
         applicationId = "dev.altayeb.anon"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.1.0"
+        versionCode = 5
+        versionName = "1.2.0"
     }
     // Release key lives outside the repo; set ANON_KS / ANON_KS_PASS / ANON_KEY_ALIAS to sign.
     signingConfigs {
@@ -64,3 +64,12 @@ androidComponents {
         afterEvaluate { tasks.named("assemble$name") { dependsOn(check) } }
     }
 }
+
+// The licence texts ship inside the app, for Settings > Open source licenses.
+val copyLegal = tasks.register<Copy>("copyLegal") {
+    from(rootProject.file("NOTICE")) { rename { "NOTICE.txt" } }
+    from(rootProject.file("LICENSE")) { rename { "LICENSE.txt" } }
+    into(layout.buildDirectory.dir("generated/legal"))
+}
+android.sourceSets["main"].assets.srcDir(layout.buildDirectory.dir("generated/legal").get().asFile)
+tasks.named("preBuild") { dependsOn(copyLegal) }

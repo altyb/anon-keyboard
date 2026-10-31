@@ -24,6 +24,7 @@ class ClipPanel(context: Context, private val panelHeight: Int) : LinearLayout(c
         fun onClipDelete(clip: Clip)
         fun onClipClearAll()   // removes unpinned clips
         fun onClipClose()
+        fun onEditAction(action: Int)
     }
 
     var listener: Listener? = null
@@ -40,6 +41,7 @@ class ClipPanel(context: Context, private val panelHeight: Int) : LinearLayout(c
         removeAllViews()
         setBackgroundColor(theme.bg)
         addView(header(items), lp(MATCH, dp(52)))
+        addView(editRow(), lp(MATCH, dp(44)))
         val list = LinearLayout(context).apply { orientation = VERTICAL; setPadding(0, dp(4), 0, dp(12)) }
         if (items.isEmpty()) {
             list.addView(empty(), lp(MATCH, WRAP))
@@ -79,6 +81,25 @@ class ClipPanel(context: Context, private val panelHeight: Int) : LinearLayout(c
         clear.visibility = if (items.any { !it.pinned }) View.VISIBLE else View.GONE
         bar.addView(clear)
         return bar
+    }
+
+    /** Undo, redo and the text menu actions, for fields where they are otherwise a long-press away. */
+    private fun editRow(): View = LinearLayout(context).apply {
+        orientation = HORIZONTAL
+        setBackgroundColor(theme.panel)
+        for ((action, label) in listOf(
+            UNDO to R.string.edit_undo, REDO to R.string.edit_redo, android.R.id.selectAll to R.string.edit_select_all,
+            android.R.id.cut to R.string.edit_cut, android.R.id.copy to R.string.edit_copy, android.R.id.paste to R.string.edit_paste,
+            VOICE to R.string.edit_voice,
+        )) {
+            addView(TextView(context).apply {
+                setText(label)
+                textSize = 13f
+                gravity = Gravity.CENTER
+                setTextColor(theme.accent)
+                setOnClickListener { listener?.onEditAction(action) }
+            }, lp(0, MATCH, 1f))
+        }
     }
 
     private fun empty() = LinearLayout(context).apply {
@@ -180,4 +201,10 @@ class ClipPanel(context: Context, private val panelHeight: Int) : LinearLayout(c
     private fun dp(v: Int) = (v * d).toInt()
 
     private fun lp(w: Int, h: Int, weight: Float = 0f) = LinearLayout.LayoutParams(w, h, weight)
+
+    companion object {
+        const val UNDO = -1
+        const val REDO = -2
+        const val VOICE = -3
+    }
 }

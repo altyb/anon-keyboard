@@ -212,6 +212,16 @@ class UserDict(private val file: File) {
     }
 
     companion object {
+        /** True if [f] parses completely as a saved dictionary. */
+        fun isValid(f: File): Boolean = try {
+            DataInputStream(BufferedInputStream(FileInputStream(f))).use { din ->
+                if (din.readInt() != MAGIC || din.readInt() != VERSION) return false
+                repeat(din.readInt()) { din.readUTF(); din.readUTF(); din.readFloat() }
+                repeat(din.readInt()) { din.readUTF(); din.readUTF(); din.readUTF(); din.readFloat() }
+                true
+            }
+        } catch (e: java.io.IOException) { false }
+
         const val MAX_WORDS = 5_000
         const val MAX_PAIRS = 20_000
         const val MAX_CONTACTS = 2_000

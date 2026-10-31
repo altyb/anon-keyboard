@@ -76,7 +76,6 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         lang = getSharedPreferences(Prefs.FILE, MODE_PRIVATE).getString("lang", "en") ?: "en"
         worker.post {
             userDict = UserDict(File(filesDir, "user.dict")).also { it.load() }
-            for (l in Layouts.languages) engines[l] = Engine(openTrie(l), userDict)
         }
         clipboard.addPrimaryClipChangedListener(clipListener)
         getSharedPreferences(Prefs.FILE, MODE_PRIVATE).registerOnSharedPreferenceChangeListener(wipeListener)
@@ -105,6 +104,9 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         workerThread.quitSafely()
         super.onDestroy()
     }
+
+    /** Worker only. A language's dictionary is built the first time it is used, so unused ones cost nothing. */
+    private fun engine(l: String): Engine = engines.getOrPut(l) { Engine(openTrie(l), userDict) }
 
     /** Dictionary file is built once from the bundled word list, then memory-mapped on every start. */
     private fun openTrie(l: String): Trie {
@@ -165,9 +167,12 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
                 variation == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS ||
                 variation == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS)
         strip.visibility = if (noSuggestions) View.GONE else View.VISIBLE
-        hideClipPanel()
-        hideEmoji()
-        stopEmojiSearch()
+        // A restart is the same field redoing its setup (Compose does it on cut); an open panel stays.
+        if (!restarting) {
+            hideClipPanel()
+            hideEmoji()
+            stopEmojiSearch()
+        }
         // Nothing from the previous field may act in this one (a stale autocorrect could rewrite a password).
         autoCorrect = false
         best = ""
@@ -176,6 +181,8 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         lastGlide = ""
         capsLock = false
         keys.hand = prefs.oneHanded
+        keys.split = prefs.split && resources.configuration.screenWidthDp >= 600
+        if (lang !in Layouts.enabled(prefs.languages)) lang = Layouts.enabled(prefs.languages)[0]
         keys.swipeEdit = prefs.swipeEdit
         applyLayout(if (numeric) "numbers" else lang)
         if (prefs.contacts) loadContacts() else worker.post { userDict.setContacts(emptyList()) }
@@ -263,7 +270,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     }
 
     override fun onSwipeSpace(dir: Int) {
-        if (layout?.id == "en" || layout?.id == "ar") nextLanguage(dir)
+        if (layout?.id in Layouts.ALL) nextLanguage(dir)
     }
 
     override fun onCursor(dir: Int) {
@@ -296,7 +303,9 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         val prev = WORD.findAll(before).lastOrNull()?.value.orEmpty()
         worker.post {
             val words = try {
-                engines[engineLang]?.glide(Glide(path, centers), prev).orEmpty()
+                engine(engineLang).glide(Glide(path, centers), prev)
+            } catch (e: java.io.IOException) {
+                emptyList()
             } catch (e: RuntimeException) {
                 emptyList() // damaged dictionary: nothing typed rather than a dead keyboard
             }
@@ -335,8 +344,8 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     }
 
     private fun nextLanguage(dir: Int) {
-        val list = Layouts.languages
-        lang = list[(list.indexOf(lang) + dir + list.size) % list.size]
+        val list = Layouts.enabled(prefs.languages)
+        lang = list[(list.indexOf(lang).coerceAtLeast(0) + dir + list.size) % list.size]
         getSharedPreferences(Prefs.FILE, MODE_PRIVATE).edit().putString("lang", lang).apply()
         applyLayout(lang)
         updateShift()
@@ -391,13 +400,15 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         if (noSuggestions || !::strip.isInitialized) return
         val gen = ++generation
         val before = currentInputConnection?.getTextBeforeCursor(64, 0)?.toString().orEmpty()
-        val engineLang = layout?.takeIf { it.id == "en" || it.id == "ar" }?.id ?: lang
+        val engineLang = layout?.takeIf { it.id in Layouts.ALL }?.id ?: lang
         val ac = prefs.autocorrect
         val next = prefs.predictNext
         worker.post {
             if (gen != generation) return@post
             val result = try {
-                engines[engineLang]?.suggest(before, ac, next) ?: Suggestions.EMPTY
+                engine(engineLang).suggest(before, ac, next)
+            } catch (e: java.io.IOException) {
+                Suggestions.EMPTY // this language's dictionary cannot be read
             } catch (e: RuntimeException) {
                 Suggestions.EMPTY // damaged dictionary: no suggestions rather than a dead keyboard
             }
@@ -459,13 +470,17 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         if (clip.itemCount == 0) return
         val sensitive = Build.VERSION.SDK_INT >= 33 &&
             clip.description.extras?.getBoolean(ClipDescription.EXTRA_IS_SENSITIVE) == true
-        val text = clip.getItemAt(0).coerceToText(this)?.toString() ?: return
+        val item = clip.getItemAt(0)
+        if (item.uri != null && clip.description.hasMimeType("image/*")) {
+            clips.add(getString(R.string.clip_image), sensitive, item.uri.toString())
+            return
+        }
+        val text = item.coerceToText(this)?.toString() ?: return
         clips.add(text, sensitive)
         requestSuggestions() // shows the paste chip
     }
 
     private fun showClipPanel() {
-        if (!prefs.clipboard) return
         hideEmoji()
         val panel = clipPanel ?: ClipPanel(this, keys.height.coerceAtLeast(1)).also {
             it.listener = this
@@ -473,7 +488,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         }
         panel.theme = theme
         panel.animations = Motion.enabled(prefs.animations)
-        panel.show(clips.items(), System.currentTimeMillis())
+        panel.show(if (prefs.clipboard) clips.items() else emptyList(), System.currentTimeMillis())
         if (panel.parent == null) { root.addView(panel); slideIn(panel) }
         keys.visibility = View.GONE
     }
@@ -484,12 +499,20 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     }
 
     override fun onClipPaste(clip: Clip) {
-        currentInputConnection?.commitText(clip.text, 1)
+        val image = clip.uri
+        if (image != null) {
+            // Only the app being typed in can insert an image, by pasting. Fails quietly if the source took back access.
+            runCatching {
+                clipboard.setPrimaryClip(android.content.ClipData.newUri(contentResolver, clip.text, android.net.Uri.parse(image)))
+                currentInputConnection?.performContextMenuAction(android.R.id.paste)
+            }
+        } else currentInputConnection?.commitText(clip.text, 1)
         hideClipPanel()
         requestSuggestions()
     }
 
     override fun onClipPin(clip: Clip, pinned: Boolean) {
+        if (clip.uri != null) return // an image's address does not survive a restart, so it cannot be kept
         clips.pin(clip.id, pinned)
         savePins()
         showClipPanel()
@@ -508,6 +531,36 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
 
     override fun onClipClose() = hideClipPanel()
 
+    /** Hands over to a voice keyboard the user installed. This app itself never hears anything. */
+    private fun startVoice() {
+        val imm = getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+        for (im in imm.enabledInputMethodList) {
+            if (im.packageName == packageName) continue
+            val voice = imm.getEnabledInputMethodSubtypeList(im, true).firstOrNull { it.mode == "voice" } ?: continue
+            if (Build.VERSION.SDK_INT >= 28) switchInputMethod(im.id, voice)
+            return
+        }
+        android.widget.Toast.makeText(this, R.string.voice_none, android.widget.Toast.LENGTH_LONG).show()
+    }
+
+    override fun onEditAction(action: Int) {
+        if (action == ClipPanel.VOICE) { startVoice(); return }
+        val ic = currentInputConnection ?: return
+        fun ctrl(key: Int, meta: Int) {
+            val now = android.os.SystemClock.uptimeMillis()
+            ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, key, 0, meta))
+            ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, key, 0, meta))
+        }
+        when (action) {
+            ClipPanel.UNDO -> ctrl(KeyEvent.KEYCODE_Z, KeyEvent.META_CTRL_ON)
+            ClipPanel.REDO -> ctrl(KeyEvent.KEYCODE_Z, KeyEvent.META_CTRL_ON or KeyEvent.META_SHIFT_ON)
+            else -> ic.performContextMenuAction(action)
+        }
+        lastGlide = ""
+        lastCorrection = null
+        requestSuggestions()
+    }
+
     /** Disk full / IO error: keep the data in memory and try again next time; never crash the keyboard. */
     private fun saveDict() = try { userDict.save() } catch (e: java.io.IOException) {}
 
@@ -516,6 +569,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     // Settings and keyboard share one process, so a wipe pressed in Settings lands here at once.
     private val wipeListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "wipeLearnedAt" || key == "wipeClipsAt") main.post { applyWipeRequests() }
+        if (key == Backup.RELOAD_KEY) worker.post { if (::userDict.isInitialized) userDict.load() }
     }
 
     /** Settings asks for a wipe by writing a time stamp; we do it on the next keyboard show. */
@@ -538,7 +592,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
 
     /** Theme colours + animation switch to every surface. Never touches sizes. */
     private fun applyLook() {
-        theme = KeyTheme.of(this, prefs.theme)
+        theme = KeyTheme.of(this, prefs.theme, prefs.accent)
         keys.setTheme(theme)
         val motion = Motion.enabled(prefs.animations)
         keys.animations = motion
@@ -589,8 +643,11 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     // ---- emoji search: the keys type into the search bar instead of the app ----
 
     private val emojiIndex by lazy {
-        EmojiIndex(assets.open("emoji-names.txt").bufferedReader().use { it.readLines() })
+        val paint = android.graphics.Paint()
+        EmojiIndex(assets.open("emoji-names.txt").bufferedReader().use { it.readLines() }.filter { paint.hasGlyph(it.substringBefore('\t')) })
     }
+
+    private fun findEmoji(q: String) = emojiIndex.search(q).map { emojiPanel?.toned(it) ?: it }
 
     override fun onEmojiSearch() {
         hideEmoji()
@@ -607,7 +664,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
         keys.swipeEdit = false
         shift = false
         keys.shifted = false
-        if (layout?.id != "en" && layout?.id != "ar") applyLayout(lang)
+        if (layout?.id !in Layouts.ALL) applyLayout(lang)
     }
 
     private fun stopEmojiSearch() {
@@ -622,7 +679,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     private fun searchKey(code: Int) {
         val bar = searchBar ?: return
         when (code) {
-            Codes.DELETE -> bar.show(bar.query.dropLast(1), emojiIndex.search(bar.query.dropLast(1)))
+            Codes.DELETE -> bar.show(bar.query.dropLast(1), findEmoji(bar.query.dropLast(1)))
             Codes.ENTER -> bar.results.firstOrNull()?.let { onSearchPick(it) }
             Codes.SYMBOLS -> applyLayout("symbols")
             Codes.LETTERS -> applyLayout(lang)
@@ -635,7 +692,7 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     private fun searchText(text: String) {
         val bar = searchBar ?: return
         val q = (bar.query + text).take(40)
-        bar.show(q, emojiIndex.search(q))
+        bar.show(q, findEmoji(q))
     }
 
     override fun onSearchPick(emoji: String) {
@@ -653,17 +710,19 @@ class KeyboardService : InputMethodService(), KeyboardView.Listener, SuggestionS
     private fun applyLayout(id: String) {
         val l = Layouts.get(id, prefs.numberRow)
         layout = l
-        val name = when (l.id) { "en" -> "English"; "ar" -> "العربية"; else -> "" }
+        val name = Layouts.ALL[l.id].orEmpty()
         keys.setLayout(l, prefs.keyHeight, prefs.hints, prefs.vibrate, name)
-        keys.glideEnabled = prefs.glide && !noSuggestions && !searching && (l.id == "en" || l.id == "ar")
-        if (l.id == "en" || l.id == "ar") worker.post { engines[l.id]?.setLayout(l) }
+        keys.glideEnabled = prefs.glide && !noSuggestions && !searching && l.id in Layouts.ALL
+        if (l.id in Layouts.ALL) worker.post {
+            try { engine(l.id).setLayout(l) } catch (e: java.io.IOException) {} // no suggestions rather than a crash
+        }
     }
 
     private fun updateShift() {
         if (capsLock || !::keys.isInitialized) return
         val ic = currentInputConnection ?: return
         val info = currentInputEditorInfo ?: return
-        shift = prefs.autoCaps && layout?.id == "en" && ic.getCursorCapsMode(info.inputType) != 0
+        shift = prefs.autoCaps && layout?.rtl == false && layout?.id in Layouts.ALL && ic.getCursorCapsMode(info.inputType) != 0
         keys.shifted = shift
     }
 

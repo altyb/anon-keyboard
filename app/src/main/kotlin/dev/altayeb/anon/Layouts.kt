@@ -32,13 +32,19 @@ data class Key(
 class Layout(val id: String, val rows: List<List<Key>>, val rtl: Boolean)
 
 object Layouts {
-    /** Languages the globe key cycles through, in order. */
-    val languages = listOf("en", "ar")
+    /** Every language with a layout and a dictionary, with its name for the space bar. */
+    val ALL = linkedMapOf(
+        "en" to "English", "ar" to "العربية", "fr" to "Français", "es" to "Español",
+        "de" to "Deutsch", "pt" to "Português", "ru" to "Русский",
+    )
+
+    /** The enabled ones from a setting like "en,ar", in that order. Never empty. */
+    fun enabled(setting: String): List<String> = setting.split(',').filter { it in ALL }.distinct().ifEmpty { listOf("en") }
 
     private val cache = HashMap<String, Layout>()
 
     fun get(id: String, numberRow: Boolean): Layout {
-        val real = if (id == "ar" || id == "symbols" || id == "numbers") id else "en"
+        val real = if (id in ALL || id == "symbols" || id == "numbers") id else "en"
         return cache.getOrPut("$real/$numberRow") { build(real, numberRow) }
     }
 
@@ -46,12 +52,18 @@ object Layouts {
         "ar" -> arabic(numberRow)
         "symbols" -> symbols()
         "numbers" -> numbers()
+        "fr" -> latin("fr", numberRow, "a z e r t y u i o p", "q s d f g h j k l m", "w x c v b n")
+        "es" -> latin("es", numberRow, "q w e r t y u i o p", "a s d f g h j k l ñ", "z x c v b n m")
+        "de" -> latin("de", numberRow, "q w e r t z u i o p ü", "a s d f g h j k l ö ä", "y x c v b n m")
+        "pt" -> latin("pt", numberRow, "q w e r t y u i o p", "a s d f g h j k l ç", "z x c v b n m")
+        "ru" -> latin("ru", numberRow, "й ц у к е н г ш щ з х", "ф ы в а п р о л д ж э", "я ч с м и т ь б ю")
         else -> english(numberRow)
     }
 
     /** Accented letters and look-alikes offered on long-press, by base letter. */
     private val ALTS = mapOf(
         "a" to "à á â ä ã å æ", "c" to "ç", "e" to "é è ê ë ē €", "i" to "í ì î ï", "n" to "ñ",
+        "е" to "ё", "ь" to "ъ",
         "o" to "ó ò ô ö õ ø œ", "s" to "ß", "u" to "ú ù û ü", "y" to "ý ÿ",
         "ا" to "أ إ آ ٱ", "ي" to "ى ئ", "ى" to "ئ ي", "ه" to "ة", "و" to "ؤ", "ل" to "لا", "ء" to "ئ ؤ",
         "ك" to "گ", "ف" to "ڤ", "ج" to "چ", "ب" to "پ",
@@ -95,6 +107,19 @@ object Layouts {
             Key("⌫", Codes.DELETE, width = 1.5f)
         rows += bottomRow("123", ",", ";", listOf("?", "!", ",", ";", ":", "…"))
         return Layout("en", rows, rtl = false)
+    }
+
+    /** Any layout that only differs from English in its letters; symbols stay as hints on the digits row. */
+    private fun latin(id: String, numberRow: Boolean, top: String, middle: String, bottom: String): Layout {
+        val rows = mutableListOf<List<Key>>()
+        if (numberRow) rows += digitRow()
+        rows += topRow(top, "1234567890", listOf("%", "\\", "|", "=", "[", "]", "<", ">", "{", "}"), numberRow)
+        rows += letterRow(middle, listOf("@", "#", "$", "_", "&", "-", "+", "(", ")"))
+        rows += listOf(Key("⇧", Codes.SHIFT, width = 1.5f)) +
+            letterRow(bottom, listOf("*", "\"", "'", ":", ";", "!", "?")) +
+            Key("⌫", Codes.DELETE, width = 1.5f)
+        rows += bottomRow("123", ",", ";", listOf("?", "!", ",", ";", ":", "…"))
+        return Layout(id, rows, rtl = false)
     }
 
     private fun arabic(numberRow: Boolean): Layout {

@@ -70,7 +70,7 @@
     <string name="theme_dynamic">ألوان الخلفية</string>
     <string name="animations">الحركة</string>
     <string name="animations_sub">تلاشي الأزرار والنوافذ المنبثقة</string>
-    <string name="credit_text">قوائم الكلمات: FrequencyWords من Hermit Dave، رخصة CC BY-SA 4.0. أزواج الكلمات: Tatoeba، رخصة CC BY 2.0 FR.</string>
+    <string name="credit_text">قوائم الكلمات: FrequencyWords من Hermit Dave، رخصة CC BY-SA 4.0. أزواج الكلمات: Tatoeba، رخصة CC BY 2.0 FR. الإيموجي: Unicode.</string>
     <string name="theme_material">ماتيريال يو</string>
     <string name="glide">الكتابة بالسحب</string>
     <string name="glide_sub">اسحب فوق الحروف دون رفع إصبعك</string>
@@ -79,4 +79,27 @@
     <string name="one_handed">وضع اليد الواحدة</string>
     <string name="one_handed_sub">مفاتيح أضيق في جهة واحدة. اضغط مطولاً على زر الإيموجي للتشغيل أو الإيقاف</string>
     <string name="emoji_search_hint">ابحث عن إيموجي</string>
+    <string name="edit_undo">تراجع</string>
+    <string name="edit_redo">إعادة</string>
+    <string name="edit_select_all">الكل</string>
+    <string name="edit_cut">قص</string>
+    <string name="edit_copy">نسخ</string>
+    <string name="edit_paste">لصق</string>
+    <string name="theme_light">فاتح</string>
+    <string name="accent">اللون المميز</string>
+    <string name="emoji_tone">لون بشرة الإيموجي</string>
+    <string name="backup_save">حفظ نسخة من الكلمات المتعلمة والإعدادات</string>
+    <string name="backup_restore">استعادة من نسخة</string>
+    <string name="backup_saved">تم حفظ النسخة</string>
+    <string name="backup_failed">تعذر حفظ النسخة</string>
+    <string name="backup_restored">تمت الاستعادة</string>
+    <string name="backup_bad_file">هذا الملف ليس نسخة من Hudhud</string>
+    <string name="group_languages">اللغات</string>
+    <string name="split">لوحة مقسومة</string>
+    <string name="split_sub">فراغ في الوسط للإبهامين، على الأجهزة اللوحية والشاشات العريضة</string>
+    <string name="clip_image">صورة</string>
+    <string name="edit_voice">صوت</string>
+    <string name="voice_none">لا توجد لوحة صوتية. ثبّت واحدة مثل FUTO Voice Input وفعّلها في إعدادات أندرويد.</string>
+    <string name="licenses">تراخيص المصادر المفتوحة</string>
+    <string name="licenses_close">إغلاق</string>
 </resources>

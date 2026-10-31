@@ -1,10 +1,14 @@
-<p align="center"><img src="design/logo/hudhud.svg" width="120" alt="Hudhud logo"></p>
-
-<h1 align="center">Hudhud Keyboard</h1>
+<p align="center"><img src="docs/brand/banner.png" width="100%" alt="Hudhud"></p>
 
 <p align="center">A small Android keyboard for English and Arabic. No internet permission. Nothing leaves the phone.</p>
 
 <p align="center"><i>The hudhud, the hoopoe, is the messenger bird of the old stories. This one carries your words only as far as the text box.</i></p>
+
+<p align="center">
+  <a href="https://github.com/altyb/hudhud/releases/latest"><img src="docs/badges/github.png" height="64" alt="Get it on GitHub"></a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/altyb/hudhud"><img src="docs/badges/obtainium.png" height="64" alt="Get it on Obtainium"></a>
+  <!-- Turn on once listed. docs/badges/izzy.png, fdroid.png, play.png -->
+</p>
 
 <p align="center">
   <a href="https://github.com/altyb/hudhud/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/altyb/hudhud?label=release"></a>
@@ -21,7 +25,7 @@ Formerly Anon Keyboard. Sister app: [Shoebill](https://github.com/altyb/shoebill
 
 ## Install
 
-1. Download `hudhud-1.1.0.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
+1. Download `hudhud-1.2.0.apk` from [Releases](https://github.com/altyb/hudhud/releases/latest). One file for every Android phone, Android 8.0 or newer.
 2. Open it and allow installing from your browser or file manager if Android asks.
 3. Open **Hudhud Keyboard**, tap **Enable keyboard**, switch it on, then **Choose keyboard**.
 
@@ -40,11 +44,16 @@ So I wrote my own. The rules were: it has to stay light on any Android phone, no
 - **Suggestions that predict.** It completes the word you are typing and guesses the next one after a space, using word frequencies and word pairs. It learns your own words over time, on the phone only.
 - **Glide typing.** Slide across the letters in English or Arabic. It runs on the phone with no Google library. Other guesses wait on the strip, and backspace removes the whole word. Words on one straight row are the hard case, so check the strip for those.
 - **Autocorrect that stays out of the way.** It only fixes a word when it is fairly sure, and backspace right after puts your word back.
+- **Seven languages.** English, Arabic, French, Spanish, German, Portuguese and Russian, each with its own layout and dictionary. Pick yours in Settings. Next-word prediction is English and Arabic only for now.
 - **English and Arabic.** Standard Arabic layout with all letters, hamza forms on long-press, and Arabic matching that ignores diacritics. Swipe the space bar to switch.
 - **Cursor and delete swipes.** Hold space and drag to move the cursor. A quick flick on space still switches language. Slide on delete to remove whole words.
 - **One-handed mode.** Long-press the emoji key. The free side moves the keys across or goes back to full width.
+- **Edit buttons.** Undo, redo, select all, cut, copy and paste in the clipboard panel.
+- **Voice.** A button there hands over to a voice keyboard you installed, such as FUTO Voice Input, for offline dictation. This app never hears anything.
+- **Split layout** on tablets and wide screens.
+- **Backup.** Save your learned words and settings to a file and restore them on a new phone.
 - **The classic layout.** Tall keys, symbols and digits on the keys, long-press popups with accents.
-- **Clipboard.** Recent copies, pin the ones you want to keep, and a paste chip in the suggestion row for what you just copied.
+- **Clipboard.** Recent copies, including images where the app you type in accepts them, pin the ones you want to keep, and a paste chip in the suggestion row for what you just copied.
 - **Emoji panel** with recents and search by English or Arabic name.
 - **Two looks.** Classic (the default, above) or Material You: rounder keys in your wallpaper colours with a springy press. Key sizes and layout are the same in both.
 - **Calm motion.** Short fades and slides with one shared timing, never on the key press itself. Off with one switch, and off automatically when Android's "Remove animations" is on.
@@ -78,7 +87,11 @@ Needs JDK 17+ and the Android SDK (compileSdk 36, minSdk 26).
 
 ## Credits
 
-Word frequency lists from [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords) (built from OpenSubtitles), licensed CC BY-SA 4.0. Emoji names from [Unicode CLDR](https://cldr.unicode.org). Next-word pairs counted from [Tatoeba](https://tatoeba.org) sentences, CC BY 2.0 FR. See [NOTICE](NOTICE).
+Word frequency lists from [hermitdave/FrequencyWords](https://github.com/hermitdave/FrequencyWords) (built from OpenSubtitles), licensed CC BY-SA 4.0. Those word lists stay under that licence; the code is Apache 2.0. Emoji names from [Unicode CLDR](https://cldr.unicode.org). Next-word pairs counted from [Tatoeba](https://tatoeba.org) sentences, CC BY 2.0 FR. See [NOTICE](NOTICE).
+
+## Privacy policy
+
+[PRIVACY.md](PRIVACY.md)
 
 ## License
 

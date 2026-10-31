@@ -26,6 +26,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -65,6 +66,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,6 +119,7 @@ private fun SettingsScreen(prefs: SharedPreferences) {
     var typed by remember { mutableStateOf("") }
     var height by remember { mutableIntStateOf(prefs.getInt("keyHeight", d.keyHeight).coerceIn(80, 140)) }
     var hand by remember { mutableIntStateOf(prefs.getInt("oneHanded", d.oneHanded)) }
+    var askLicenses by remember { mutableStateOf(false) }
     var askWords by remember { mutableStateOf(false) }
     var askClips by remember { mutableStateOf(false) }
 
@@ -125,6 +131,27 @@ private fun SettingsScreen(prefs: SharedPreferences) {
     fun wipe(key: String) {
         prefs.edit().putLong(key, System.currentTimeMillis()).apply()
         scope.launch { snack.showSnackbar(done) }
+    }
+    fun tell(msg: Int) { val text = context.getString(msg); scope.launch { snack.showSnackbar(text) } }
+    val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri != null) scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val ok = runCatching {
+                context.contentResolver.openOutputStream(uri)!!.use { Backup.write(it, java.io.File(context.filesDir, "user.dict"), prefs.all) }
+            }.isSuccess
+            tell(if (ok) R.string.backup_saved else R.string.backup_failed)
+        }
+    }
+    val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val ok = runCatching {
+                val data = context.contentResolver.openInputStream(uri)!!.use { Backup.read(it, java.io.File(context.cacheDir, "restore.dict")) }
+                val edit = prefs.edit()
+                Backup.applyPrefs(data.prefs, edit)
+                data.dict?.let { java.nio.file.Files.move(it.toPath(), java.io.File(context.filesDir, "user.dict").toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING) }
+                edit.putLong(Backup.RELOAD_KEY, System.currentTimeMillis()).apply()
+            }.isSuccess
+            tell(if (ok) R.string.backup_restored else R.string.backup_bad_file)
+        }
     }
     val contacts = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         setFlag("contacts", it) // denied keeps it off
@@ -188,6 +215,8 @@ private fun SettingsScreen(prefs: SharedPreferences) {
                     Flag("incognito", d.incognito, R.string.incognito, R.string.incognito_sub)
                     Flag("clearClipsOnLock", d.clearClipsOnLock, R.string.clear_on_lock, R.string.clear_on_lock_sub)
                     Flag("secureKeyboard", d.secureKeyboard, R.string.secure_keyboard, R.string.secure_keyboard_sub)
+                    ActionRow(R.string.backup_save) { saveBackup.launch("hudhud-backup.zip") }
+                    ActionRow(R.string.backup_restore) { openBackup.launch(arrayOf("application/zip", "application/octet-stream")) }
                     ActionRow(R.string.clear_words) { askWords = true }
                     ActionRow(R.string.clear_clips) { askClips = true }
                 }
@@ -204,7 +233,11 @@ private fun SettingsScreen(prefs: SharedPreferences) {
             }
             item { LookGroup(d) }
             item {
+                Group(R.string.group_languages) { LanguageChoice(prefs, d.languages) }
+            }
+            item {
                 Group(R.string.group_layout) {
+                    Flag("split", d.split, R.string.split, R.string.split_sub)
                     SwitchRow(R.string.one_handed, R.string.one_handed_sub, hand != 0) {
                         hand = if (it) 1 else 0
                         prefs.edit().putInt("oneHanded", hand).apply()
@@ -235,6 +268,7 @@ private fun SettingsScreen(prefs: SharedPreferences) {
             if (Build.VERSION.SDK_INT >= 33) item { LanguageGroup() }
             item {
                 Group(R.string.group_about) {
+                    ActionRow(R.string.licenses) { askLicenses = true }
                     Text(
                         stringResource(R.string.about_text),
                         Modifier.padding(16.dp),
@@ -258,6 +292,17 @@ private fun SettingsScreen(prefs: SharedPreferences) {
         }
     }
 
+    if (askLicenses) {
+        val text = remember {
+            runCatching { listOf("NOTICE.txt", "LICENSE.txt").joinToString("\n\n") { n -> context.assets.open(n).bufferedReader().use { it.readText() } } }.getOrDefault("")
+        }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { askLicenses = false },
+            title = { Text(stringResource(R.string.licenses)) },
+            text = { Text(text, Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()), style = MaterialTheme.typography.bodySmall) },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = { askLicenses = false }) { Text(stringResource(R.string.licenses_close)) } },
+        )
+    }
     if (askWords) ConfirmDialog(R.string.confirm_words_title, R.string.confirm_words_text,
         onConfirm = { wipe("wipeLearnedAt"); askWords = false }, onDismiss = { askWords = false })
     if (askClips) ConfirmDialog(R.string.confirm_clips_title, R.string.confirm_clips_text,
@@ -272,8 +317,8 @@ private fun LookGroup(d: Prefs) {
     var anim by remember { mutableStateOf(prefs.getBoolean("animations", d.animations)) }
     Group(R.string.group_look) {
         run {
-            val tags = listOf("classic", "material")
-            val labels = listOf(R.string.theme_classic, R.string.theme_material)
+            val tags = listOf("classic", "light", "material")
+            val labels = listOf(R.string.theme_classic, R.string.theme_light, R.string.theme_material)
             Text(stringResource(R.string.theme), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.bodyLarge)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(8.dp)) {
                 labels.forEachIndexed { i, label ->
@@ -286,8 +331,67 @@ private fun LookGroup(d: Prefs) {
                 }
             }
         }
+        ColorChoice(R.string.accent, ACCENTS, prefs.getInt("accent", d.accent)) { prefs.edit().putInt("accent", it).apply() }
+        ToneChoice(prefs)
         SwitchRow(R.string.animations, R.string.animations_sub, anim) {
             anim = it; prefs.edit().putBoolean("animations", it).apply()
+        }
+    }
+}
+
+/** Languages the space bar switches between. At least one always stays on. */
+@Composable
+private fun LanguageChoice(prefs: SharedPreferences, default: String) {
+    var on by remember { mutableStateOf(Layouts.enabled(prefs.getString("languages", default) ?: default)) }
+    Layouts.ALL.forEach { (id, name) ->
+        Row(
+            Modifier.fillMaxWidth().clickable {
+                val next = if (id in on) on - id else on + id
+                if (next.isNotEmpty()) {
+                    on = next
+                    prefs.edit().putString("languages", next.joinToString(",")).apply()
+                }
+            }.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            androidx.compose.material3.Checkbox(checked = id in on, onCheckedChange = null)
+        }
+    }
+}
+
+private val ACCENTS = listOf(0, 0xFF71E2FB.toInt(), 0xFFF2A65A.toInt(), 0xFF7BD88F.toInt(), 0xFFFF7A90.toInt(), 0xFFC3A6FF.toInt())
+
+@Composable
+private fun ColorChoice(title: Int, colors: List<Int>, start: Int, onPick: (Int) -> Unit) {
+    var sel by remember { mutableIntStateOf(start) }
+    Text(stringResource(title), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.bodyLarge)
+    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        colors.forEach { c ->
+            Box(
+                Modifier.size(36.dp).clip(RoundedCornerShape(18.dp))
+                    .background(if (c == 0) Color.Gray else Color(c))
+                    .then(if (sel == c) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, RoundedCornerShape(18.dp)) else Modifier)
+                    .clickable { sel = c; onPick(c) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ToneChoice(prefs: SharedPreferences) {
+    var tone by remember { mutableIntStateOf(prefs.getInt("emojiTone", 0)) }
+    val hands = listOf("👍", "👍🏻", "👍🏼", "👍🏽", "👍🏾", "👍🏿")
+    Text(stringResource(R.string.emoji_tone), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.bodyLarge)
+    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        hands.forEachIndexed { i, h ->
+            Text(
+                h,
+                Modifier.clip(RoundedCornerShape(8.dp))
+                    .background(if (tone == i) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { tone = i; prefs.edit().putInt("emojiTone", i).apply() }.padding(6.dp),
+                style = MaterialTheme.typography.titleLarge,
+            )
         }
     }
 }

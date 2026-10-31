@@ -2,7 +2,8 @@ package dev.altayeb.anon
 
 import java.io.File
 
-data class Clip(val id: Long, val text: String, val time: Long, val pinned: Boolean)
+/** [uri]: a copied image, then [text] is only its label. */
+data class Clip(val id: Long, val text: String, val time: Long, val pinned: Boolean, val uri: String? = null)
 
 /** Clipboard history in RAM. Max [cap] items, unpinned ones expire after [ttlMs]. Main thread only. */
 class ClipHistory(
@@ -14,11 +15,11 @@ class ClipHistory(
     private var nextId = 1L
 
     /** Add a copied text. Ignored if [sensitive], blank, or same as newest. Text cut to 2 000 chars. */
-    fun add(text: String, sensitive: Boolean) {
+    fun add(text: String, sensitive: Boolean, uri: String? = null) {
         if (sensitive || text.isBlank()) return
         val t = text.take(MAX_CHARS)
-        if (list.firstOrNull()?.text == t) return
-        list.add(0, Clip(nextId++, t, clock(), false))
+        if (list.firstOrNull()?.let { it.text == t && it.uri == uri } == true) return
+        list.add(0, Clip(nextId++, t, clock(), false, uri))
         var unpinned = list.count { !it.pinned }
         val iter = list.listIterator(list.size)
         while (unpinned > cap && iter.hasPrevious()) {

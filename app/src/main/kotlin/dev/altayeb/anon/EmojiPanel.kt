@@ -30,6 +30,7 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
     /** Tab 0 = recents (snapshot, refreshed on open and on tab tap); tabs 1..8 = file categories. */
     private val icons: Array<String>
     private val grid: Array<Array<String>>
+    private val toneable: Set<String>
     private val recentsView = ArrayList<String>()
 
     private var selectedTab = 1
@@ -69,12 +70,15 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
             r.lineSequence().filter { it.isNotBlank() }.map { it.split('\t') }.toList()
         }
         icons = (listOf(RECENT_ICON) + rows.map { it[0] }).toTypedArray()
-        grid = rows.map { row -> row[1].split(' ').filter { it.isNotEmpty() }.toTypedArray() }.toTypedArray()
+        // Newer emoji than this phone's font would show as empty boxes.
+        grid = rows.map { row -> row[1].split(' ').filter { it.isNotEmpty() && emojiPaint.hasGlyph(it) }.toTypedArray() }.toTypedArray()
+        toneable = context.assets.open("emoji-tones.txt").bufferedReader().use { it.readText() }.split(' ').toHashSet()
     }
 
     /** Call before showing: recents tab if there are any, else tab 1. */
     fun open() {
         loadRecents()
+        tone = prefs.getInt("emojiTone", 0).coerceIn(0, 5)
         selectedTab = if (recentsView.isEmpty()) 1 else 0
         scrollY = 0f
         invalidate()
@@ -111,7 +115,7 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
             for (c in 0 until COLS) {
                 val i = r * COLS + c
                 if (i >= count) break
-                canvas.drawText(itemAt(selectedTab, i), c * cellW + cellW / 2, baseline, emojiPaint)
+                canvas.drawText(toned(itemAt(selectedTab, i)), c * cellW + cellW / 2, baseline, emojiPaint)
             }
         }
         canvas.restore()
@@ -170,7 +174,7 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
             else -> {
                 val col = (x / (w / COLS)).toInt()
                 val idx = ((y - tabH + scrollY) / rowH).toInt() * COLS + col
-                if (col < COLS && idx < itemCount(selectedTab)) pick(itemAt(selectedTab, idx))
+                if (col < COLS && idx < itemCount(selectedTab)) pick(toned(itemAt(selectedTab, idx)))
             }
         }
     }
@@ -189,6 +193,16 @@ class EmojiPanel(context: Context, private val panelHeight: Int) : View(context)
     private fun itemCount(tab: Int): Int = if (tab == 0) recentsView.size else grid[tab - 1].size
 
     private fun itemAt(tab: Int, i: Int): String = if (tab == 0) recentsView[i] else grid[tab - 1][i]
+
+    /** 0 = default yellow, 1..5 = light to dark. Read when the panel opens. */
+    private var tone = 0
+
+    /** [emoji] in the chosen skin tone, when Unicode defines that form. */
+    fun toned(emoji: String): String {
+        if (tone == 0 || emoji !in toneable) return emoji
+        val first = emoji.offsetByCodePoints(0, 1)
+        return emoji.substring(0, first) + String(Character.toChars(0x1F3FA + tone)) + emoji.substring(first).replaceFirst("\uFE0F", "")
+    }
 
     /** Vertical text baseline that centres the glyph on [cy]. */
     private fun baselineFor(cy: Float, p: Paint): Float = cy - (p.ascent() + p.descent()) / 2

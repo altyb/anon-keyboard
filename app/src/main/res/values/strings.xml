@@ -73,7 +73,7 @@
     <string name="theme_dynamic">Wallpaper colours</string>
     <string name="animations">Animations</string>
     <string name="animations_sub">Key fades, popups and panels</string>
-    <string name="credit_text">Word lists: FrequencyWords by Hermit Dave, CC BY-SA 4.0. Word pairs: Tatoeba, CC BY 2.0 FR.</string>
+    <string name="credit_text">Word lists: FrequencyWords by Hermit Dave, CC BY-SA 4.0. Word pairs: Tatoeba, CC BY 2.0 FR. Emoji: Unicode.</string>
     <string name="theme_material">Material You</string>
     <string name="glide">Glide typing</string>
     <string name="glide_sub">Slide across the letters without lifting your finger</string>
@@ -82,4 +82,27 @@
     <string name="one_handed">One-handed mode</string>
     <string name="one_handed_sub">Narrower keys on one side. Long-press the emoji key to turn it on or off</string>
     <string name="emoji_search_hint">Search emoji</string>
+    <string name="edit_undo">Undo</string>
+    <string name="edit_redo">Redo</string>
+    <string name="edit_select_all">All</string>
+    <string name="edit_cut">Cut</string>
+    <string name="edit_copy">Copy</string>
+    <string name="edit_paste">Paste</string>
+    <string name="theme_light">Light</string>
+    <string name="accent">Accent colour</string>
+    <string name="emoji_tone">Emoji skin tone</string>
+    <string name="backup_save">Save a backup of learned words and settings</string>
+    <string name="backup_restore">Restore from a backup</string>
+    <string name="backup_saved">Backup saved</string>
+    <string name="backup_failed">Could not save the backup</string>
+    <string name="backup_restored">Backup restored</string>
+    <string name="backup_bad_file">That file is not a Hudhud backup</string>
+    <string name="group_languages">Languages</string>
+    <string name="split">Split keyboard</string>
+    <string name="split_sub">Gap in the middle for two thumbs, on tablets and wide screens</string>
+    <string name="clip_image">Image</string>
+    <string name="edit_voice">Voice</string>
+    <string name="voice_none">No voice keyboard found. Install one, such as FUTO Voice Input, and enable it in Android settings.</string>
+    <string name="licenses">Open source licenses</string>
+    <string name="licenses_close">Close</string>
 </resources>
