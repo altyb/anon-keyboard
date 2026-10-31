@@ -21,7 +21,7 @@
 <p align="center"><img src="docs/screens/english.png" width="45%" alt="English layout"> <img src="docs/screens/arabic.png" width="45%" alt="Arabic layout"></p>
 <p align="center"><img src="docs/screens/one-handed.png" width="45%" alt="One-handed mode"> <img src="docs/screens/emoji-search.png" width="45%" alt="Emoji search"></p>
 
-Formerly Anon Keyboard. Sister app: [Shoebill](https://github.com/altyb/shoebill), a private video player.
+Sister app: [Shoebill](https://github.com/altyb/shoebill), a private video player.
 
 ## Install
 
