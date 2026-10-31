@@ -81,7 +81,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-private val AnonDark = darkColorScheme(
+private val BrandDark = darkColorScheme(
     background = Color(0xFF101112),
     surface = Color(0xFF1B1B1C),
     surfaceContainer = Color(0xFF2C2D2F),
@@ -99,7 +99,7 @@ class Settings : ComponentActivity() {
         enableEdgeToEdge()
         val prefs = getSharedPreferences(Prefs.FILE, MODE_PRIVATE)
         setContent {
-            MaterialTheme(colorScheme = AnonDark) {
+            MaterialTheme(colorScheme = BrandDark) {
                 SettingsScreen(prefs)
             }
         }
