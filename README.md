@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/altyb/hudhud/releases/latest"><img src="docs/badges/github.png" height="64" alt="Get it on GitHub"></a>
   <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/altyb/hudhud"><img src="docs/badges/obtainium.png" height="64" alt="Get it on Obtainium"></a>
-  <!-- Turn on once listed. docs/badges/izzy.png, fdroid.png, play.png -->
+  <!-- Turn on once listed. docs/badges/fdroid.png, play.png -->
 </p>
 
 <p align="center">
