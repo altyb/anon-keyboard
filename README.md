@@ -31,6 +31,8 @@ Formerly Anon Keyboard. Sister app: [Shoebill](https://github.com/altyb/shoebill
 
 Check the file before installing if you like: the SHA-256 is listed on the release page.
 
+Using the F-Droid app? Add my own repo under Settings, Repositories: `https://altyb.github.io/fdroid/repo?fingerprint=4882F491E55FA2B5630EBA1409087C2DC2F404E8786813D0E60B13569CC1040A`. These are the same signed APKs as the GitHub releases. The apps are not in the main F-Droid catalogue yet.
+
 ## Why I made it
 
 For years I typed on Ginger Keyboard. Not for the grammar tools. I kept it because of the layout: big keys, the old Android look, numbers and symbols printed on the keys so a long-press gives you what you see. Every newer keyboard I tried felt cramped, or slow after a few weeks, or wanted an account, or showed me things I did not ask for.
@@ -85,6 +87,10 @@ Measured on a Xiaomi 17 Ultra while typing: 0.3% janky frames, median frame 5 ms
 ```
 
 Needs JDK 17+ and the Android SDK (compileSdk 36, minSdk 26).
+
+## How it was made
+
+Much of this code was written with an AI coding assistant (Claude) under my direction. If something looks wrong, please open an issue.
 
 ## Credits
 
